@@ -1,7 +1,8 @@
 """
 Lance's AI API  v2.0
 ────────────────────
-Endpoints : GET /          health check + endpoint map
+Endpoints : GET /          HTML landing page
+            GET /health    health check (JSON)
             GET /models    show available providers
             POST /ask      single-turn Q&A  (Claude or OpenAI)
             POST /chat     multi-turn chat   (Claude or OpenAI)
@@ -162,472 +163,757 @@ def health():
     }
 
 
+# ── Landing page ───────────────────────────────────────────────────────────────
 _LANDING_HTML = """<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Lance's AI API</title>
+  <title>Lance AI API — Production-Ready AI Infrastructure</title>
+  <meta name="description" content="Dual-provider AI API powering Claude and GPT-4o. Built for developers who ship."/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #07080f;
-      --surface: rgba(255,255,255,0.04);
-      --border: rgba(255,255,255,0.08);
-      --accent: #7c6dfa;
-      --accent2: #e96bff;
-      --green: #22d3a5;
-      --text: #e8eaf2;
-      --muted: #6b7089;
+      --bg:       #030712;
+      --bg2:      #060d1f;
+      --surface:  rgba(255,255,255,0.04);
+      --surface2: rgba(255,255,255,0.07);
+      --border:   rgba(255,255,255,0.08);
+      --border2:  rgba(255,255,255,0.15);
+      --primary:  #6366f1;
+      --primary-l:#818cf8;
+      --cyan:     #06b6d4;
+      --green:    #10b981;
+      --text:     #f1f5f9;
+      --text2:    #94a3b8;
+      --muted:    #475569;
     }
 
+    html { scroll-behavior: smooth; }
+
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', -apple-system, sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
       overflow-x: hidden;
     }
 
-    /* ── Background orbs ── */
-    .orb {
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(120px);
-      opacity: 0.18;
-      pointer-events: none;
-      z-index: 0;
+    /* BG */
+    .bg-grid {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.045) 1px, transparent 1px);
+      background-size: 32px 32px;
     }
-    .orb-1 { width: 600px; height: 600px; background: var(--accent); top: -200px; left: -150px; }
-    .orb-2 { width: 500px; height: 500px; background: var(--accent2); top: 200px; right: -200px; }
-    .orb-3 { width: 400px; height: 400px; background: var(--green); bottom: -100px; left: 30%; }
+    .bg-orb {
+      position: fixed; border-radius: 50%;
+      pointer-events: none; z-index: 0; filter: blur(140px);
+    }
+    .orb1 { width: 700px; height: 700px; background: var(--primary);  top: -280px; left: -200px; opacity: 0.13; }
+    .orb2 { width: 500px; height: 500px; background: var(--cyan);     top: 80px;   right: -180px; opacity: 0.07; }
+    .orb3 { width: 600px; height: 600px; background: #8b5cf6;         bottom: -200px; left: 25%; opacity: 0.09; }
 
-    .wrapper { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .container { position: relative; z-index: 1; max-width: 1160px; margin: 0 auto; padding: 0 24px; }
 
-    /* ── Nav ── */
+    /* ── NAV ── */
     nav {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(24px) saturate(180%);
+      background: rgba(3,7,18,0.75);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 24px 0; border-bottom: 1px solid var(--border);
+      height: 64px; max-width: 1160px; margin: 0 auto; padding: 0 24px;
     }
-    .nav-logo { font-size: 15px; font-weight: 700; letter-spacing: 0.05em; color: var(--text); }
-    .nav-logo span { color: var(--accent); }
-    .nav-links { display: flex; gap: 24px; }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); }
+    .logo-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--primary), var(--cyan));
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-wordmark { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; }
+    .logo-tag {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      background: rgba(99,102,241,0.18); border: 1px solid rgba(99,102,241,0.3);
+      color: var(--primary-l); padding: 2px 7px; border-radius: 5px;
+    }
+    .nav-links { display: flex; align-items: center; gap: 2px; }
     .nav-links a {
-      color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500;
-      transition: color .2s;
+      color: var(--text2); text-decoration: none; font-size: 13px; font-weight: 500;
+      padding: 6px 13px; border-radius: 8px; transition: all .18s;
     }
-    .nav-links a:hover { color: var(--text); }
-    .nav-badge {
-      display: flex; align-items: center; gap: 6px;
-      background: rgba(34,211,165,0.12); border: 1px solid rgba(34,211,165,0.25);
-      border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 600; color: var(--green);
+    .nav-links a:hover { background: var(--surface2); color: var(--text); }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .status-pill {
+      display: flex; align-items: center; gap: 6px; padding: 5px 13px;
+      background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.22);
+      border-radius: 999px; font-size: 11px; font-weight: 600; color: var(--green);
     }
-    .pulse {
-      width: 7px; height: 7px; border-radius: 50%; background: var(--green);
-      animation: pulse 2s infinite;
+    .pulse-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+      animation: blink 2.2s ease-in-out infinite;
     }
-    @keyframes pulse {
-      0%,100% { box-shadow: 0 0 0 0 rgba(34,211,165,0.5); }
-      50% { box-shadow: 0 0 0 6px rgba(34,211,165,0); }
+    @keyframes blink {
+      0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.6); }
+      50%      { box-shadow: 0 0 0 5px rgba(16,185,129,0); }
     }
+    .btn-nav {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 18px; border-radius: 9px; font-size: 13px; font-weight: 600;
+      text-decoration: none; color: #fff;
+      background: var(--primary); transition: all .18s;
+    }
+    .btn-nav:hover { background: var(--primary-l); transform: translateY(-1px); }
 
-    /* ── Hero ── */
-    .hero { text-align: center; padding: 96px 0 64px; }
-    .hero-pill {
+    /* ── HERO ── */
+    .hero {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 56px; align-items: center; padding: 100px 0 88px;
+    }
+    .hero-eyebrow {
       display: inline-flex; align-items: center; gap: 8px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 999px; padding: 6px 16px; font-size: 12px;
-      color: var(--muted); margin-bottom: 32px; letter-spacing: 0.05em; text-transform: uppercase;
+      background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.22);
+      border-radius: 999px; padding: 5px 14px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.05em; color: var(--primary-l);
+      margin-bottom: 28px;
     }
-    .hero-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent2); }
+    .eyebrow-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--primary-l); }
     h1 {
-      font-size: clamp(42px, 7vw, 80px);
-      font-weight: 900;
-      line-height: 1.05;
-      letter-spacing: -0.03em;
-      margin-bottom: 24px;
+      font-size: clamp(38px, 4.8vw, 60px);
+      font-weight: 900; line-height: 1.07; letter-spacing: -0.04em;
+      margin-bottom: 20px;
     }
-    h1 .grad {
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    .grad-text {
+      background: linear-gradient(135deg, var(--primary-l) 0%, var(--cyan) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
     .hero-sub {
-      font-size: 18px; color: var(--muted); max-width: 540px; margin: 0 auto 48px;
-      line-height: 1.6; font-weight: 400;
+      font-size: 16px; color: var(--text2); line-height: 1.72;
+      max-width: 440px; margin-bottom: 36px;
     }
-    .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-    .btn {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 600;
-      text-decoration: none; transition: all .2s; cursor: pointer; border: none;
-    }
+    .hero-cta { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 36px; }
     .btn-primary {
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #fff;
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 26px; border-radius: 11px; font-size: 14px; font-weight: 600;
+      text-decoration: none; color: #fff;
+      background: linear-gradient(135deg, var(--primary), #7c3aed);
+      box-shadow: 0 4px 28px rgba(99,102,241,0.35); transition: all .2s;
     }
-    .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
-    .btn-ghost {
-      background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 36px rgba(99,102,241,0.45); }
+    .btn-outline {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 26px; border-radius: 11px; font-size: 14px; font-weight: 600;
+      text-decoration: none; color: var(--text2);
+      background: var(--surface); border: 1px solid var(--border2); transition: all .2s;
     }
-    .btn-ghost:hover { background: rgba(255,255,255,0.08); transform: translateY(-1px); }
-
-    /* ── Stats row ── */
-    .stats {
-      display: flex; justify-content: center; gap: 48px; flex-wrap: wrap;
-      padding: 48px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-      margin-bottom: 80px;
+    .btn-outline:hover { color: var(--text); background: var(--surface2); transform: translateY(-2px); }
+    .hero-trust { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+    .trust-item {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--muted); font-weight: 500;
     }
-    .stat { text-align: center; }
-    .stat-num { font-size: 32px; font-weight: 800; letter-spacing: -0.02em; }
-    .stat-num.purple { color: var(--accent); }
-    .stat-num.pink   { color: var(--accent2); }
-    .stat-num.green  { color: var(--green); }
-    .stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; font-weight: 500; }
-
-    /* ── Section title ── */
-    .section-title { text-align: center; margin-bottom: 48px; }
-    .section-title h2 { font-size: 32px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
-    .section-title p { color: var(--muted); font-size: 15px; }
-
-    /* ── Endpoint cards ── */
-    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 80px; }
-    .card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: 24px;
-      transition: all .25s; position: relative; overflow: hidden;
-    }
-    .card::before {
-      content: ''; position: absolute; inset: 0;
-      background: linear-gradient(135deg, var(--card-color, var(--accent)) 0%, transparent 60%);
-      opacity: 0; transition: opacity .25s; border-radius: 16px;
-    }
-    .card:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-3px); }
-    .card:hover::before { opacity: 0.06; }
-    .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-    .card-icon {
-      width: 42px; height: 42px; border-radius: 10px;
+    .trust-check {
+      width: 14px; height: 14px; border-radius: 50%;
+      background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3);
       display: flex; align-items: center; justify-content: center;
-      font-size: 20px; flex-shrink: 0;
+      font-size: 8px; color: var(--green);
     }
-    .card-method {
-      font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
-      padding: 3px 8px; border-radius: 4px;
-    }
-    .get  { background: rgba(34,211,165,0.15); color: var(--green); }
-    .post { background: rgba(124,109,250,0.15); color: var(--accent); }
-    .card-path { font-size: 15px; font-weight: 700; color: var(--text); }
-    .card-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
 
-    /* ── Providers ── */
-    .providers { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 80px; }
-    .provider-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px;
-      display: flex; flex-direction: column; gap: 16px;
+    /* ── DEMO CARD ── */
+    .demo-wrap { position: relative; display: flex; justify-content: center; align-items: center; }
+    .demo-glow {
+      position: absolute; inset: -24px;
+      background: radial-gradient(ellipse at center, rgba(99,102,241,0.18) 0%, transparent 68%);
     }
-    .provider-logo { font-size: 36px; }
-    .provider-name { font-size: 20px; font-weight: 700; }
-    .provider-model {
-      display: inline-block; font-size: 12px; font-weight: 600; letter-spacing: 0.05em;
-      padding: 4px 10px; border-radius: 6px; background: rgba(255,255,255,0.06);
-      border: 1px solid var(--border); color: var(--muted);
+    .demo-card {
+      position: relative; background: var(--bg2);
+      border: 1px solid var(--border2); border-radius: 18px;
+      overflow: hidden; width: 100%; max-width: 460px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.04);
     }
-    .provider-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .demo-card::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(99,102,241,0.7) 35%, rgba(6,182,212,0.7) 65%, transparent 100%);
+    }
+    .demo-topbar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 13px 16px; border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.025);
+    }
+    .win-dots { display: flex; gap: 5px; }
+    .wd { width: 10px; height: 10px; border-radius: 50%; }
+    .wd-r { background: #ff5f57; } .wd-y { background: #ffbd2e; } .wd-g { background: #28c840; }
+    .demo-url {
+      flex: 1; text-align: center; font-size: 11px; color: var(--muted);
+      font-family: 'SF Mono', monospace; letter-spacing: 0.01em;
+    }
+    .demo-body { padding: 20px 22px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12.5px; line-height: 1.75; }
+    .demo-sep {
+      font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--muted); font-weight: 600; margin: 14px 0 10px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .demo-sep::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .req-block {
+      background: rgba(99,102,241,0.07); border: 1px solid rgba(99,102,241,0.14);
+      border-radius: 9px; padding: 14px 16px;
+    }
+    .res-block {
+      background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.12);
+      border-radius: 9px; padding: 14px 16px;
+      animation: fadeUp .5s ease 1.1s both;
+    }
+    .ok-row {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+      animation: fadeDown .4s ease .85s both;
+    }
+    .ok-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(16,185,129,0.14); border: 1px solid rgba(16,185,129,0.28);
+      border-radius: 5px; padding: 2px 9px; font-size: 11px; font-weight: 700; color: var(--green);
+    }
+    .ok-ms { font-size: 11px; color: var(--muted); }
+    @keyframes fadeDown { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:none; } }
+    @keyframes fadeUp   { from { opacity:0; transform:translateY(7px);  } to { opacity:1; transform:none; } }
+    .dm  { color: #475569; }
+    .dp  { color: #818cf8; }
+    .ds  { color: #34d399; }
+    .dk  { color: #06b6d4; }
+    .dnum{ color: #fb923c; }
 
-    /* ── Code block ── */
-    .code-section { margin-bottom: 80px; }
-    .code-tabs { display: flex; gap: 4px; margin-bottom: -1px; }
-    .code-tab {
-      padding: 8px 16px; font-size: 12px; font-weight: 600; border-radius: 8px 8px 0 0;
-      background: var(--surface); border: 1px solid var(--border); border-bottom: none;
-      color: var(--muted); cursor: pointer; transition: all .2s;
+    /* ── STATS BAR ── */
+    .stats-bar {
+      border: 1px solid var(--border); border-radius: 18px;
+      display: grid; grid-template-columns: repeat(4,1fr);
+      margin-bottom: 100px; overflow: hidden;
     }
-    .code-tab.active { background: #131520; color: var(--text); border-color: rgba(255,255,255,0.12); }
-    .code-box {
-      background: #131520; border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 0 12px 12px 12px; padding: 28px; overflow-x: auto;
+    .stat {
+      padding: 30px 20px; text-align: center;
+      border-right: 1px solid var(--border); position: relative;
     }
-    pre { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; font-size: 13px; line-height: 1.7; }
-    .c-dim    { color: #4a5068; }
-    .c-green  { color: #22d3a5; }
-    .c-blue   { color: #79b8ff; }
-    .c-yellow { color: #ffd680; }
-    .c-purple { color: #c792ea; }
-    .c-orange { color: #ffab76; }
-    .c-pink   { color: #e96bff; }
+    .stat:last-child { border-right: none; }
+    .stat-val { font-size: 28px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 5px; }
+    .c-indigo  { color: var(--primary-l); }
+    .c-cyan    { color: var(--cyan); }
+    .c-green   { color: var(--green); }
+    .c-violet  { color: #a78bfa; }
+    .stat-lbl  { font-size: 12px; color: var(--muted); font-weight: 500; }
 
-    /* ── Auth section ── */
-    .auth-section {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
-      padding: 40px; margin-bottom: 80px; display: flex; gap: 40px; align-items: flex-start;
-      flex-wrap: wrap;
+    /* ── SECTION HEADER ── */
+    .sec-hd { text-align: center; margin-bottom: 60px; }
+    .sec-pill {
+      display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--primary-l);
+      background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.22);
+      border-radius: 999px; padding: 4px 13px; margin-bottom: 16px;
     }
-    .auth-text { flex: 1; min-width: 240px; }
-    .auth-text h3 { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
-    .auth-text p { font-size: 14px; color: var(--muted); line-height: 1.7; }
-    .auth-rules { flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 12px; }
-    .auth-rule {
-      display: flex; gap: 12px; align-items: flex-start;
-      background: rgba(255,255,255,0.03); border: 1px solid var(--border);
-      border-radius: 10px; padding: 14px;
-    }
-    .auth-rule-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
-    .auth-rule-text { font-size: 13px; line-height: 1.5; }
-    .auth-rule-text strong { color: var(--text); display: block; margin-bottom: 2px; }
-    .auth-rule-text span { color: var(--muted); }
+    .sec-hd h2 { font-size: 38px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 10px; }
+    .sec-hd p  { font-size: 15px; color: var(--text2); max-width: 490px; margin: 0 auto; line-height: 1.65; }
 
-    /* ── Footer ── */
-    footer {
-      border-top: 1px solid var(--border); padding: 32px 0;
-      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
+    /* ── ENDPOINT CARDS ── */
+    .ep-grid {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 12px; margin-bottom: 100px;
     }
-    .footer-left { font-size: 13px; color: var(--muted); }
-    .footer-left strong { color: var(--text); }
-    .footer-right { display: flex; gap: 16px; }
-    .footer-right a {
-      font-size: 13px; color: var(--muted); text-decoration: none; font-weight: 500;
-      transition: color .2s;
+    .ep-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 15px; padding: 24px; transition: all .22s;
+      position: relative; overflow: hidden;
     }
-    .footer-right a:hover { color: var(--text); }
+    .ep-card:hover { border-color: var(--border2); background: var(--surface2); transform: translateY(-3px); box-shadow: 0 16px 48px rgba(0,0,0,0.35); }
+    .ep-card:hover .ep-arr { opacity: 1; transform: translateX(0); }
+    .ep-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .ep-badges { display: flex; align-items: center; gap: 6px; }
+    .ep-method {
+      font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 3px 9px; border-radius: 5px;
+    }
+    .m-get  { background: rgba(16,185,129,0.12);  color: var(--green);     border: 1px solid rgba(16,185,129,0.22); }
+    .m-post { background: rgba(99,102,241,0.12); color: var(--primary-l); border: 1px solid rgba(99,102,241,0.22); }
+    .ep-path { font-size: 14px; font-weight: 700; font-family: 'SF Mono', monospace; }
+    .ep-arr  { color: var(--muted); opacity: 0; transform: translateX(-5px); transition: all .2s; }
+    .ep-icon { font-size: 26px; margin-bottom: 12px; }
+    .ep-title { font-size: 14px; font-weight: 700; margin-bottom: 7px; }
+    .ep-desc  { font-size: 12.5px; color: var(--text2); line-height: 1.6; }
 
-    @media (max-width: 640px) {
-      .providers { grid-template-columns: 1fr; }
-      .stats { gap: 28px; }
-      nav { flex-wrap: wrap; gap: 12px; }
+    /* ── HOW IT WORKS ── */
+    .steps-wrap { display: grid; grid-template-columns: repeat(3,1fr); gap: 0; margin-bottom: 100px; position: relative; }
+    .steps-wrap::before {
+      content: ''; position: absolute;
+      top: 27px; left: calc(16.67% + 12px); right: calc(16.67% + 12px);
+      height: 1px;
+      background: linear-gradient(90deg, var(--primary) 0%, var(--cyan) 100%);
+      opacity: 0.25;
+    }
+    .step { text-align: center; padding: 0 28px; }
+    .step-num {
+      width: 54px; height: 54px; border-radius: 14px; margin: 0 auto 22px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 800;
+    }
+    .sn1 { background: rgba(99,102,241,0.12);  border: 1px solid rgba(99,102,241,0.25);  color: var(--primary-l); }
+    .sn2 { background: rgba(139,92,246,0.12);  border: 1px solid rgba(139,92,246,0.25);  color: #a78bfa; }
+    .sn3 { background: rgba(6,182,212,0.12);   border: 1px solid rgba(6,182,212,0.25);   color: var(--cyan); }
+    .step h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .step p   { font-size: 13px; color: var(--text2); line-height: 1.65; }
+    code { font-family: 'SF Mono', monospace; font-size: 11.5px; }
+
+    /* ── PROVIDERS ── */
+    .prov-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 100px; }
+    .prov-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 18px; padding: 34px; transition: all .22s;
+    }
+    .prov-card:hover { border-color: var(--border2); transform: translateY(-3px); box-shadow: 0 16px 48px rgba(0,0,0,0.3); }
+    .prov-hd { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+    .prov-logo {
+      width: 50px; height: 50px; border-radius: 13px;
+      display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;
+    }
+    .pl-claude { background: rgba(255,154,76,0.12); border: 1px solid rgba(255,154,76,0.22); }
+    .pl-openai { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.22); }
+    .prov-name { font-size: 18px; font-weight: 700; margin-bottom: 3px; }
+    .prov-model{ font-size: 11px; color: var(--muted); font-family: monospace; font-weight: 500; }
+    .prov-desc { font-size: 13px; color: var(--text2); line-height: 1.72; margin-bottom: 22px; }
+    .prov-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .ptag {
+      font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 6px;
+    }
+    .pt-c { background: rgba(255,154,76,0.1);  color: #fb923c; border: 1px solid rgba(255,154,76,0.18); }
+    .pt-o { background: rgba(16,185,129,0.1);  color: var(--green); border: 1px solid rgba(16,185,129,0.18); }
+
+    /* ── CODE BLOCK ── */
+    .code-section { margin-bottom: 100px; }
+    .code-card {
+      background: #060d1f; border: 1px solid var(--border2);
+      border-radius: 18px; overflow: hidden;
+      box-shadow: 0 28px 72px rgba(0,0,0,0.5);
+    }
+    .code-topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px; border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+    }
+    .code-tabs { display: flex; }
+    .ctab {
+      padding: 13px 16px; font-size: 12px; font-weight: 600;
+      color: var(--muted); border-bottom: 2px solid transparent; transition: all .18s;
+      cursor: default;
+    }
+    .ctab.on { color: var(--text); border-bottom-color: var(--primary); }
+    .code-badge {
+      font-size: 11px; font-weight: 600; color: var(--muted);
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 5px 13px; border-radius: 7px;
+    }
+    .code-body { padding: 30px 32px; overflow-x: auto; }
+    pre { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; font-size: 13px; line-height: 1.85; }
+    .cc { color: #374151; }
+    .cm { color: #10b981; }
+    .ch { color: #f59e0b; }
+    .cv { color: #34d399; }
+    .cj { color: #6b7280; }
+    .ck { color: #c084fc; }
+    .cs { color: #fbbf24; }
+    .cu { color: #818cf8; }
+
+    /* ── CTA ── */
+    .cta-wrap {
+      background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(6,182,212,0.06));
+      border: 1px solid rgba(99,102,241,0.22); border-radius: 22px;
+      padding: 64px 48px; text-align: center; margin-bottom: 80px; position: relative; overflow: hidden;
+    }
+    .cta-wrap::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--primary), var(--cyan), transparent);
+    }
+    .cta-wrap h2 { font-size: 38px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 12px; }
+    .cta-wrap p  { font-size: 15px; color: var(--text2); margin-bottom: 36px; }
+    .cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+    /* ── FOOTER ── */
+    footer { border-top: 1px solid var(--border); padding: 44px 0; }
+    .foot-inner {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 20px;
+    }
+    .foot-left {}
+    .foot-brand { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; }
+    .foot-brand-name { font-size: 14px; font-weight: 700; }
+    .foot-copy { font-size: 12px; color: var(--muted); }
+    .foot-links { display: flex; gap: 24px; flex-wrap: wrap; }
+    .foot-links a {
+      font-size: 13px; color: var(--muted); text-decoration: none;
+      font-weight: 500; transition: color .18s;
+    }
+    .foot-links a:hover { color: var(--text); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 960px) {
+      .hero { grid-template-columns: 1fr; }
+      .demo-wrap { display: none; }
+      .ep-grid { grid-template-columns: 1fr 1fr; }
+      .prov-grid { grid-template-columns: 1fr; }
+      .steps-wrap { grid-template-columns: 1fr; gap: 36px; }
+      .steps-wrap::before { display: none; }
+      .stats-bar { grid-template-columns: 1fr 1fr; }
+      .stat:nth-child(2) { border-right: none; }
+      .stat:nth-child(1),
+      .stat:nth-child(2) { border-bottom: 1px solid var(--border); }
       .nav-links { display: none; }
+    }
+    @media (max-width: 580px) {
+      .ep-grid { grid-template-columns: 1fr; }
+      .cta-wrap { padding: 40px 24px; }
+      h1 { font-size: 36px; }
     }
   </style>
 </head>
 <body>
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-  <div class="orb orb-3"></div>
+  <div class="bg-grid"></div>
+  <div class="bg-orb orb1"></div>
+  <div class="bg-orb orb2"></div>
+  <div class="bg-orb orb3"></div>
 
-  <div class="wrapper">
-
-    <!-- Nav -->
-    <nav>
-      <div class="nav-logo">LANCE<span>.</span>AI</div>
+  <!-- ── NAV ── -->
+  <nav>
+    <div class="nav-inner">
+      <a href="/" class="logo">
+        <div class="logo-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="white"/>
+          </svg>
+        </div>
+        <span class="logo-wordmark">Lance AI</span>
+        <span class="logo-tag">API</span>
+      </a>
       <div class="nav-links">
-        <a href="/docs">Docs</a>
-        <a href="/models">Models</a>
-        <a href="/health">Health</a>
+        <a href="#endpoints">Endpoints</a>
+        <a href="#providers">Providers</a>
+        <a href="#quickstart">Code</a>
+        <a href="/health">Status</a>
       </div>
-      <div class="nav-badge"><div class="pulse"></div> Online · v2.0</div>
-    </nav>
+      <div class="nav-right">
+        <div class="status-pill"><div class="pulse-dot"></div>All Systems Online</div>
+        <a href="/docs" class="btn-nav">Open Docs &#8594;</a>
+      </div>
+    </div>
+  </nav>
 
-    <!-- Hero -->
+  <div class="container">
+
+    <!-- ── HERO ── -->
     <section class="hero">
-      <div class="hero-pill"><div class="dot"></div> Production API · Railway</div>
-      <h1>Your AI.<br/><span class="grad">Your API.</span></h1>
-      <p class="hero-sub">
-        A production-ready AI backend supporting Claude (Anthropic) and GPT-4o (OpenAI).
-        Built by <strong>Lance Galicia</strong> — AI Engineer &amp; RAG Systems Builder.
-      </p>
-      <div class="hero-actions">
-        <a href="/docs" class="btn btn-primary">⚡ Try it Live</a>
-        <a href="/health" class="btn btn-ghost">🔍 Health Check</a>
+      <div>
+        <div class="hero-eyebrow"><div class="eyebrow-dot"></div>Production-Ready &nbsp;&#183;&nbsp; v2.0</div>
+        <h1>AI Infrastructure<br/>for Modern <span class="grad-text">Builders.</span></h1>
+        <p class="hero-sub">
+          A dual-provider AI API backed by Claude and GPT-4o.
+          One endpoint. Instant responses. No setup friction.
+          Built to ship.
+        </p>
+        <div class="hero-cta">
+          <a href="/docs" class="btn-primary">&#9889; Try in Swagger</a>
+          <a href="/health" class="btn-outline">&#128314; Health Check</a>
+        </div>
+        <div class="hero-trust">
+          <div class="trust-item"><div class="trust-check">&#10003;</div>FastAPI + Docker</div>
+          <div class="trust-item"><div class="trust-check">&#10003;</div>Deployed on Railway</div>
+          <div class="trust-item"><div class="trust-check">&#10003;</div>API Key Auth</div>
+          <div class="trust-item"><div class="trust-check">&#10003;</div>Rate Limited</div>
+        </div>
+      </div>
+
+      <div class="demo-wrap">
+        <div class="demo-glow"></div>
+        <div class="demo-card">
+          <div class="demo-topbar">
+            <div class="win-dots">
+              <div class="wd wd-r"></div><div class="wd wd-y"></div><div class="wd wd-g"></div>
+            </div>
+            <div class="demo-url">lance-ai-api-production.up.railway.app</div>
+          </div>
+          <div class="demo-body">
+            <div class="demo-sep">Request</div>
+            <div class="req-block">
+<span class="dk">POST</span> <span class="dp">/ask</span>
+<span class="dm">X-API-Key: </span><span class="ds">&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;</span>
+
+<span class="dm">{</span>
+  <span class="dp">"question"</span><span class="dm">:</span> <span class="ds">"What is RAG?"</span><span class="dm">,</span>
+  <span class="dp">"provider"</span><span class="dm">:</span> <span class="ds">"claude"</span>
+<span class="dm">}</span>
+            </div>
+            <div class="demo-sep">Response</div>
+            <div class="ok-row">
+              <span class="ok-badge">&#10003; 200 OK</span>
+              <span class="ok-ms">318ms</span>
+            </div>
+            <div class="res-block">
+<span class="dm">{</span>
+  <span class="dp">"answer"</span><span class="dm">:</span> <span class="ds">"RAG combines retrieval
+  with generation to ground
+  AI answers in real data..."</span><span class="dm">,</span>
+  <span class="dp">"provider"</span><span class="dm">:</span> <span class="ds">"claude"</span><span class="dm">,</span>
+  <span class="dp">"tokens_used"</span><span class="dm">:</span> <span class="dnum">187</span>
+<span class="dm">}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- Stats -->
-    <div class="stats">
+    <!-- ── STATS ── -->
+    <div class="stats-bar">
       <div class="stat">
-        <div class="stat-num purple">2</div>
-        <div class="stat-label">AI Providers</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num pink">20/min</div>
-        <div class="stat-label">Rate Limit</div>
+        <div class="stat-val c-indigo">2</div>
+        <div class="stat-lbl">AI Providers</div>
       </div>
       <div class="stat">
-        <div class="stat-num green">20</div>
-        <div class="stat-label">Message Memory</div>
+        <div class="stat-val c-cyan">20 / min</div>
+        <div class="stat-lbl">Rate Limit</div>
       </div>
       <div class="stat">
-        <div class="stat-num purple">v2.0</div>
-        <div class="stat-label">Current Version</div>
+        <div class="stat-val c-green">20 msg</div>
+        <div class="stat-lbl">Chat Memory</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val c-violet">HTTPS</div>
+        <div class="stat-lbl">End-to-End Encrypted</div>
       </div>
     </div>
 
-    <!-- Endpoints -->
-    <div class="section-title">
-      <h2>Endpoints</h2>
-      <p>Everything you need to build AI-powered products</p>
-    </div>
-    <div class="cards">
+    <!-- ── ENDPOINTS ── -->
+    <div id="endpoints">
+      <div class="sec-hd">
+        <div class="sec-pill">Endpoints</div>
+        <h2>Everything you need to build</h2>
+        <p>Five focused endpoints. No bloat. No setup friction. Swap providers per request.</p>
+      </div>
+      <div class="ep-grid">
 
-      <div class="card" style="--card-color:#22d3a5">
-        <div class="card-header">
-          <div class="card-icon" style="background:rgba(34,211,165,0.12)">🩺</div>
-          <div>
-            <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
-              <span class="card-method get">GET</span>
-              <span class="card-path">/health</span>
+        <div class="ep-card">
+          <div class="ep-top">
+            <div class="ep-badges"><span class="ep-method m-get">GET</span><span class="ep-path">/health</span></div>
+            <span class="ep-arr">&#8594;</span>
+          </div>
+          <div class="ep-icon">&#128314;</div>
+          <div class="ep-title">Health Check</div>
+          <div class="ep-desc">Live status endpoint. Returns version and the full endpoint map. No auth required.</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-top">
+            <div class="ep-badges"><span class="ep-method m-post">POST</span><span class="ep-path">/ask</span></div>
+            <span class="ep-arr">&#8594;</span>
+          </div>
+          <div class="ep-icon">&#129504;</div>
+          <div class="ep-title">Single-Turn Q&amp;A</div>
+          <div class="ep-desc">Send a question and optional context. Get a precise AI answer back in one round trip.</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-top">
+            <div class="ep-badges"><span class="ep-method m-post">POST</span><span class="ep-path">/chat</span></div>
+            <span class="ep-arr">&#8594;</span>
+          </div>
+          <div class="ep-icon">&#128172;</div>
+          <div class="ep-title">Multi-Turn Chat</div>
+          <div class="ep-desc">Stateful conversations with 20-message rolling memory. Use session_id to continue across requests.</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-top">
+            <div class="ep-badges"><span class="ep-method m-get">GET</span><span class="ep-path">/models</span></div>
+            <span class="ep-arr">&#8594;</span>
+          </div>
+          <div class="ep-icon">&#128225;</div>
+          <div class="ep-title">Model Registry</div>
+          <div class="ep-desc">Lists available providers, model IDs, and live availability status for each.</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-top">
+            <div class="ep-badges"><span class="ep-method m-get">GET</span><span class="ep-path">/docs</span></div>
+            <span class="ep-arr">&#8594;</span>
+          </div>
+          <div class="ep-icon">&#128218;</div>
+          <div class="ep-title">Swagger UI</div>
+          <div class="ep-desc">Interactive API explorer. Test every endpoint live in your browser — no tools needed.</div>
+        </div>
+
+        <div class="ep-card" style="background:linear-gradient(135deg,rgba(99,102,241,0.08),rgba(6,182,212,0.04));border-color:rgba(99,102,241,0.22);">
+          <div class="ep-top">
+            <div class="ep-badges"><span class="ep-method m-post">POST</span><span class="ep-path">/ask &amp; /chat</span></div>
+          </div>
+          <div class="ep-icon">&#128256;</div>
+          <div class="ep-title">Provider Switching</div>
+          <div class="ep-desc">Pass <code style="color:var(--primary-l)">"provider":"claude"</code> or <code style="color:var(--primary-l)">"openai"</code> per request. Zero re-implementation.</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── HOW IT WORKS ── -->
+    <div style="margin-bottom:100px;">
+      <div class="sec-hd">
+        <div class="sec-pill">How It Works</div>
+        <h2>Three steps. First response in &lt;60s.</h2>
+        <p>From zero to live AI responses — faster than you can brew coffee.</p>
+      </div>
+      <div class="steps-wrap">
+        <div class="step">
+          <div class="step-num sn1">1</div>
+          <h3>Get Your API Key</h3>
+          <p>Request access. Set <code style="color:var(--primary-l)">X-API-Key</code> in your header. Done in 10 seconds.</p>
+        </div>
+        <div class="step">
+          <div class="step-num sn2">2</div>
+          <h3>Pick Your Provider</h3>
+          <p>Pass <code style="color:#a78bfa">"provider":"claude"</code> or <code style="color:#a78bfa">"openai"</code>. Switch any time, per request.</p>
+        </div>
+        <div class="step">
+          <div class="step-num sn3">3</div>
+          <h3>Ship Your Product</h3>
+          <p>Hit <code style="color:var(--cyan)">/ask</code> or <code style="color:var(--cyan)">/chat</code>. Get structured AI responses in milliseconds.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PROVIDERS ── -->
+    <div id="providers">
+      <div class="sec-hd">
+        <div class="sec-pill">Providers</div>
+        <h2>Two models. One API.</h2>
+        <p>Switch between the world's best AI models with a single parameter — no re-implementation, no SDK swaps.</p>
+      </div>
+      <div class="prov-grid">
+        <div class="prov-card">
+          <div class="prov-hd">
+            <div class="prov-logo pl-claude">&#129000;</div>
+            <div>
+              <div class="prov-name">Anthropic Claude</div>
+              <div class="prov-model">claude-haiku-4-5</div>
             </div>
           </div>
+          <p class="prov-desc">
+            Fast, context-aware, and precise. The default provider.
+            Exceptional at complex reasoning, structured outputs, and
+            RAG pipelines. Low latency. High consistency.
+          </p>
+          <div class="prov-tags">
+            <span class="ptag pt-c">Default Provider</span>
+            <span class="ptag pt-c">RAG-Ready</span>
+            <span class="ptag pt-c">Long Context</span>
+            <span class="ptag pt-c">Low Latency</span>
+          </div>
         </div>
-        <div class="card-desc">Live status check. Returns version info and the full endpoint map in JSON.</div>
-      </div>
-
-      <div class="card" style="--card-color:#7c6dfa">
-        <div class="card-header">
-          <div class="card-icon" style="background:rgba(124,109,250,0.12)">🧠</div>
-          <div>
-            <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
-              <span class="card-method post">POST</span>
-              <span class="card-path">/ask</span>
+        <div class="prov-card">
+          <div class="prov-hd">
+            <div class="prov-logo pl-openai">&#129001;</div>
+            <div>
+              <div class="prov-name">OpenAI GPT-4o</div>
+              <div class="prov-model">gpt-4o-mini</div>
             </div>
           </div>
-        </div>
-        <div class="card-desc">Single-turn Q&amp;A. Send a question and optional context, get a precise AI answer back instantly.</div>
-      </div>
-
-      <div class="card" style="--card-color:#e96bff">
-        <div class="card-header">
-          <div class="card-icon" style="background:rgba(233,107,255,0.12)">💬</div>
-          <div>
-            <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
-              <span class="card-method post">POST</span>
-              <span class="card-path">/chat</span>
-            </div>
-          </div>
-        </div>
-        <div class="card-desc">Multi-turn conversation with memory. Pass a session_id to continue a conversation across requests.</div>
-      </div>
-
-      <div class="card" style="--card-color:#22d3a5">
-        <div class="card-header">
-          <div class="card-icon" style="background:rgba(34,211,165,0.12)">📡</div>
-          <div>
-            <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
-              <span class="card-method get">GET</span>
-              <span class="card-path">/models</span>
-            </div>
-          </div>
-        </div>
-        <div class="card-desc">Lists available AI providers and their underlying models with live availability status.</div>
-      </div>
-
-      <div class="card" style="--card-color:#7c6dfa" style="grid-column: span 2">
-        <div class="card-header">
-          <div class="card-icon" style="background:rgba(124,109,250,0.12)">📖</div>
-          <div>
-            <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
-              <span class="card-method get">GET</span>
-              <span class="card-path">/docs</span>
-            </div>
-          </div>
-        </div>
-        <div class="card-desc">Interactive Swagger UI. Test every endpoint live in your browser — no code needed.</div>
-      </div>
-
-    </div>
-
-    <!-- Providers -->
-    <div class="section-title">
-      <h2>Providers</h2>
-      <p>Switch between AI providers per request with a single field</p>
-    </div>
-    <div class="providers">
-      <div class="provider-card">
-        <div class="provider-logo">🟠</div>
-        <div>
-          <div class="provider-name">Anthropic Claude</div>
-          <span class="provider-model">claude-haiku-4-5</span>
-        </div>
-        <div class="provider-desc">
-          Fast, capable, and context-aware. Default provider. Excellent for RAG pipelines, structured outputs, and complex reasoning.
-        </div>
-      </div>
-      <div class="provider-card">
-        <div class="provider-logo">🟢</div>
-        <div>
-          <div class="provider-name">OpenAI GPT</div>
-          <span class="provider-model">gpt-4o-mini</span>
-        </div>
-        <div class="provider-desc">
-          Cost-efficient powerhouse. Pass <code style="font-size:12px;color:var(--accent)">"provider":"openai"</code> in any request body to switch instantly.
-        </div>
-      </div>
-    </div>
-
-    <!-- Code example -->
-    <div class="code-section">
-      <div class="section-title">
-        <h2>Quick Start</h2>
-        <p>Hit the API in seconds</p>
-      </div>
-      <div class="code-tabs">
-        <div class="code-tab active">cURL</div>
-      </div>
-      <div class="code-box">
-<pre><span class="c-dim"># Single-turn Q&amp;A — Claude (default)</span>
-<span class="c-green">curl</span> <span class="c-blue">-X POST</span> https://lance-ai-api-production.up.railway.app/ask \\
-  <span class="c-blue">-H</span> <span class="c-yellow">"Content-Type: application/json"</span> \\
-  <span class="c-blue">-H</span> <span class="c-yellow">"X-API-Key: YOUR_KEY"</span> \\
-  <span class="c-blue">-d</span> <span class="c-yellow">'{</span>
-    <span class="c-pink">"question"</span><span class="c-yellow">:</span> <span class="c-orange">"What is RAG?"</span><span class="c-yellow">,</span>
-    <span class="c-pink">"provider"</span><span class="c-yellow">:</span> <span class="c-orange">"claude"</span>
-  <span class="c-yellow">}'</span>
-
-<span class="c-dim"># Multi-turn chat — start a session</span>
-<span class="c-green">curl</span> <span class="c-blue">-X POST</span> https://lance-ai-api-production.up.railway.app/chat \\
-  <span class="c-blue">-H</span> <span class="c-yellow">"Content-Type: application/json"</span> \\
-  <span class="c-blue">-H</span> <span class="c-yellow">"X-API-Key: YOUR_KEY"</span> \\
-  <span class="c-blue">-d</span> <span class="c-yellow">'{</span>
-    <span class="c-pink">"message"</span><span class="c-yellow">:</span> <span class="c-orange">"Hello! What can you help me with?"</span><span class="c-yellow">,</span>
-    <span class="c-pink">"provider"</span><span class="c-yellow">:</span> <span class="c-orange">"openai"</span>
-  <span class="c-yellow">}'</span></pre>
-      </div>
-    </div>
-
-    <!-- Auth section -->
-    <div class="auth-section">
-      <div class="auth-text">
-        <h3>🔐 Authentication</h3>
-        <p>
-          Every request to <code style="color:var(--accent);font-size:13px">/ask</code> and
-          <code style="color:var(--accent);font-size:13px">/chat</code> requires an API key
-          in the <code style="color:var(--accent2);font-size:13px">X-API-Key</code> header.
-          Rate limiting is enforced per IP to ensure fair usage.
-        </p>
-      </div>
-      <div class="auth-rules">
-        <div class="auth-rule">
-          <div class="auth-rule-icon">🔑</div>
-          <div class="auth-rule-text">
-            <strong>Header Required</strong>
-            <span>Pass <code style="color:var(--accent2)">X-API-Key: &lt;key&gt;</code> on every request</span>
-          </div>
-        </div>
-        <div class="auth-rule">
-          <div class="auth-rule-icon">⚡</div>
-          <div class="auth-rule-text">
-            <strong>Rate Limit: 20/min</strong>
-            <span>Per IP address. Returns HTTP 429 when exceeded</span>
-          </div>
-        </div>
-        <div class="auth-rule">
-          <div class="auth-rule-icon">🚫</div>
-          <div class="auth-rule-text">
-            <strong>Missing Key → 403</strong>
-            <span>Invalid or absent key returns Forbidden immediately</span>
+          <p class="prov-desc">
+            Cost-efficient and industry-standard. Pass
+            <code style="color:var(--green);font-size:12px">"provider":"openai"</code> to switch instantly.
+            Ideal when clients prefer the OpenAI ecosystem — zero extra config.
+          </p>
+          <div class="prov-tags">
+            <span class="ptag pt-o">Drop-in Switch</span>
+            <span class="ptag pt-o">Cost Efficient</span>
+            <span class="ptag pt-o">GPT-4o Quality</span>
+            <span class="ptag pt-o">Industry Standard</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Footer -->
+    <!-- ── CODE ── -->
+    <div class="code-section" id="quickstart">
+      <div class="sec-hd">
+        <div class="sec-pill">Quick Start</div>
+        <h2>Hit the API in seconds</h2>
+        <p>Production-ready examples. Copy. Paste. Ship.</p>
+      </div>
+      <div class="code-card">
+        <div class="code-topbar">
+          <div class="code-tabs">
+            <div class="ctab on">cURL</div>
+            <div class="ctab">Python</div>
+            <div class="ctab">JavaScript</div>
+          </div>
+          <div class="code-badge">&#9109; REST API</div>
+        </div>
+        <div class="code-body">
+<pre><span class="cc"># Single-turn Q&amp;A ── Claude (default) ─────────────────────────────────</span>
+<span class="cm">curl</span> -X POST <span class="cu">https://lance-ai-api-production.up.railway.app/ask</span> \
+  -H <span class="ch">"Content-Type"</span>: <span class="cv">"application/json"</span> \
+  -H <span class="ch">"X-API-Key"</span>: <span class="cv">"YOUR_SERVICE_KEY"</span> \
+  -d <span class="cj">'</span><span class="cj">{</span>
+    <span class="ck">"question"</span>: <span class="cs">"Explain RAG in 3 sentences"</span>,
+    <span class="ck">"provider"</span>: <span class="cs">"claude"</span>
+  <span class="cj">}'</span>
+
+<span class="cc"># Multi-turn chat ── start a new session ────────────────────────────────</span>
+<span class="cm">curl</span> -X POST <span class="cu">https://lance-ai-api-production.up.railway.app/chat</span> \
+  -H <span class="ch">"Content-Type"</span>: <span class="cv">"application/json"</span> \
+  -H <span class="ch">"X-API-Key"</span>: <span class="cv">"YOUR_SERVICE_KEY"</span> \
+  -d <span class="cj">'</span><span class="cj">{</span>
+    <span class="ck">"message"</span>: <span class="cs">"What can you help me build?"</span>,
+    <span class="ck">"provider"</span>: <span class="cs">"openai"</span>
+  <span class="cj">}'</span>
+
+<span class="cc"># Continue the same conversation ─────────────────────────────────────────</span>
+<span class="cm">curl</span> -X POST <span class="cu">https://lance-ai-api-production.up.railway.app/chat</span> \
+  -H <span class="ch">"Content-Type"</span>: <span class="cv">"application/json"</span> \
+  -H <span class="ch">"X-API-Key"</span>: <span class="cv">"YOUR_SERVICE_KEY"</span> \
+  -d <span class="cj">'</span><span class="cj">{</span>
+    <span class="ck">"message"</span>: <span class="cs">"Tell me more about option 2"</span>,
+    <span class="ck">"session_id"</span>: <span class="cs">"&lt;returned-session-id&gt;"</span>,
+    <span class="ck">"provider"</span>: <span class="cs">"openai"</span>
+  <span class="cj">}'</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CTA ── -->
+    <div class="cta-wrap">
+      <h2>Ready to build?</h2>
+      <p>Explore every endpoint, fire live requests, and integrate in minutes.</p>
+      <div class="cta-btns">
+        <a href="/docs" class="btn-primary">&#9889; Open Swagger UI</a>
+        <a href="/models" class="btn-outline">View Available Models</a>
+      </div>
+    </div>
+
+    <!-- ── FOOTER ── -->
     <footer>
-      <div class="footer-left">
-        Built by <strong>Lance Galicia</strong> — AI Engineer &amp; RAG Systems Builder · v2.0
-      </div>
-      <div class="footer-right">
-        <a href="/docs">Swagger UI</a>
-        <a href="/health">Health</a>
-        <a href="/models">Models</a>
+      <div class="foot-inner">
+        <div class="foot-left">
+          <div class="foot-brand">
+            <div class="logo-icon" style="width:26px;height:26px;border-radius:7px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="white"/>
+              </svg>
+            </div>
+            <span class="foot-brand-name">Lance AI API</span>
+          </div>
+          <div class="foot-copy">&#169; 2026 Lance Galicia &nbsp;&#183;&nbsp; AI Engineer &amp; RAG Systems Builder</div>
+        </div>
+        <div class="foot-links">
+          <a href="/docs">Swagger UI</a>
+          <a href="/health">Health</a>
+          <a href="/models">Models</a>
+          <a href="#endpoints">Endpoints</a>
+          <a href="#quickstart">Quick Start</a>
+        </div>
       </div>
     </footer>
 
