@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lance AI API — Production-Ready AI Infrastructure</title>
+  <meta name="description" content="Dual-provider AI API powered by Claude and GPT-4o. Built for developers who ship."/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #030712;
+      --bg2:     #060d1f;
+      --surface: rgba(255,255,255,0.04);
+      --surface2:rgba(255,255,255,0.07);
+      --border:  rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.15);
+      --p:       #6366f1;
+      --pl:      #818cf8;
+      --cyan:    #06b6d4;
+      --green:   #10b981;
+      --violet:  #8b5cf6;
+      --text:    #f1f5f9;
+      --text2:   #94a3b8;
+      --muted:   #475569;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; overflow-x: hidden;
+    }
+
+    /* ── CANVAS BG ── */
+    #webgl {
+      position: fixed; inset: 0; z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── ORB GLOWS ── */
+    .orb {
+      position: fixed; border-radius: 50%; pointer-events: none;
+      z-index: 0; filter: blur(130px); animation: orbDrift 20s ease-in-out infinite alternate;
+    }
+    .o1 { width: 800px; height: 800px; background: var(--p);     top: -300px; left: -250px; opacity: .10; animation-delay: 0s; }
+    .o2 { width: 600px; height: 600px; background: var(--cyan);  top: 100px;  right: -200px; opacity: .07; animation-delay: -7s; }
+    .o3 { width: 700px; height: 700px; background: var(--violet);bottom:-200px; left: 20%; opacity: .08; animation-delay: -14s; }
+    @keyframes orbDrift {
+      0%   { transform: translate(0,0) scale(1); }
+      50%  { transform: translate(30px, -20px) scale(1.08); }
+      100% { transform: translate(-20px, 30px) scale(0.95); }
+    }
+
+    /* ── SHARED ── */
+    .container { position: relative; z-index: 1; max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(24px) saturate(200%);
+      background: rgba(3,7,18,.80);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-in {
+      max-width: 1160px; margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between; height: 64px;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); }
+    .logo-ico {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--p), var(--cyan));
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 20px rgba(99,102,241,.4);
+    }
+    .logo-name { font-size: 15px; font-weight: 800; letter-spacing: -.02em; }
+    .logo-tag {
+      font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      background: rgba(99,102,241,.15); border: 1px solid rgba(99,102,241,.3);
+      color: var(--pl); padding: 2px 7px; border-radius: 5px;
+    }
+    .nav-links { display: flex; gap: 2px; }
+    .nav-links a {
+      color: var(--text2); text-decoration: none; font-size: 13px; font-weight: 500;
+      padding: 6px 13px; border-radius: 8px; transition: all .18s;
+    }
+    .nav-links a:hover { background: var(--surface2); color: var(--text); }
+    .nav-r { display: flex; align-items: center; gap: 12px; }
+    .online-pill {
+      display: flex; align-items: center; gap: 6px; padding: 5px 13px;
+      background: rgba(16,185,129,.10); border: 1px solid rgba(16,185,129,.22);
+      border-radius: 999px; font-size: 11px; font-weight: 600; color: var(--green);
+    }
+    .pulse-d { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.6)} 50%{box-shadow:0 0 0 6px rgba(16,185,129,0)} }
+    .btn-cta {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 18px; border-radius: 9px; font-size: 13px; font-weight: 600;
+      text-decoration: none; color: #fff; background: var(--p);
+      box-shadow: 0 4px 16px rgba(99,102,241,.3); transition: all .18s;
+    }
+    .btn-cta:hover { background: var(--pl); transform: translateY(-1px); box-shadow: 0 6px 24px rgba(99,102,241,.4); }
+
+    /* ── HERO ── */
+    .hero { padding: 100px 0 80px; }
+    .hero-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 60px; align-items: center;
+    }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(99,102,241,.10); border: 1px solid rgba(99,102,241,.22);
+      border-radius: 999px; padding: 5px 14px;
+      font-size: 11px; font-weight: 700; letter-spacing: .05em; color: var(--pl);
+      margin-bottom: 28px;
+    }
+    .eyebrow-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--pl); }
+    h1 {
+      font-size: clamp(38px, 5vw, 62px);
+      font-weight: 900; line-height: 1.06; letter-spacing: -.04em;
+      margin-bottom: 20px;
+    }
+    .grad-text {
+      background: linear-gradient(135deg, var(--pl) 0%, var(--cyan) 50%, var(--violet) 100%);
+      background-size: 200% 200%;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      animation: gradShift 4s ease infinite;
+    }
+    @keyframes gradShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .hero-sub { font-size: 16px; color: var(--text2); line-height: 1.72; max-width: 440px; margin-bottom: 36px; }
+    .hero-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 36px; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 26px; border-radius: 11px; font-size: 14px; font-weight: 600;
+      text-decoration: none; color: #fff;
+      background: linear-gradient(135deg, var(--p), #7c3aed);
+      box-shadow: 0 4px 28px rgba(99,102,241,.4); transition: all .2s;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 36px rgba(99,102,241,.5); }
+    .btn-outline {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 26px; border-radius: 11px; font-size: 14px; font-weight: 600;
+      text-decoration: none; color: var(--text2);
+      background: var(--surface); border: 1px solid var(--border2); transition: all .2s;
+    }
+    .btn-outline:hover { color: var(--text); background: var(--surface2); transform: translateY(-2px); }
+    .trust-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .trust-i {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--muted); font-weight: 500;
+    }
+    .trust-check {
+      width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(16,185,129,.15); border: 1px solid rgba(16,185,129,.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; color: var(--green);
+    }
+
+    /* ── 3D DEMO CARD ── */
+    .card-wrap { position: relative; perspective: 1200px; cursor: pointer; }
+    .card-3d {
+      position: relative; transition: transform .1s ease;
+      transform-style: preserve-3d;
+      background: var(--bg2); border: 1px solid var(--border2);
+      border-radius: 18px; overflow: hidden;
+      box-shadow: 0 32px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.04);
+    }
+    .card-3d::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(99,102,241,.8), rgba(6,182,212,.8), transparent);
+    }
+    .card-shine {
+      position: absolute; inset: 0; pointer-events: none; z-index: 2; border-radius: 18px;
+      transition: background .15s;
+    }
+    .card-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 13px 16px; border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,.025);
+    }
+    .card-dots { display: flex; gap: 5px; }
+    .cd { width: 10px; height: 10px; border-radius: 50%; }
+    .cd-r{background:#ff5f57;} .cd-y{background:#ffbd2e;} .cd-g{background:#28c840;}
+    .card-url { flex:1; text-align:center; font-size:11px; color:var(--muted); font-family:'SF Mono',monospace; }
+    .card-body { padding: 20px 22px; font-family: 'SF Mono','Fira Code',monospace; font-size: 12.5px; line-height: 1.75; }
+    .clabel {
+      font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--muted); font-weight: 700; margin: 14px 0 8px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .clabel::after { content:''; flex:1; height:1px; background:var(--border); }
+    .req-blk { background:rgba(99,102,241,.07); border:1px solid rgba(99,102,241,.14); border-radius:9px; padding:14px 16px; }
+    .res-blk { background:rgba(16,185,129,.05); border:1px solid rgba(16,185,129,.12); border-radius:9px; padding:14px 16px; animation: fadeUp .5s ease 1.2s both; }
+    .ok-row  { display:flex; align-items:center; gap:8px; margin-bottom:8px; animation: fadeDown .4s ease .9s both; }
+    .ok-b    { background:rgba(16,185,129,.14); border:1px solid rgba(16,185,129,.28); border-radius:5px; padding:2px 9px; font-size:11px; font-weight:700; color:var(--green); }
+    .ok-ms   { font-size:11px; color:var(--muted); }
+    @keyframes fadeDown { from{opacity:0;transform:translateY(-5px)} to{opacity:1;transform:none} }
+    @keyframes fadeUp   { from{opacity:0;transform:translateY(7px)}  to{opacity:1;transform:none} }
+    .c-m{color:#06b6d4;} .c-p{color:#818cf8;} .c-s{color:#34d399;} .c-n{color:#fb923c;} .c-d{color:#475569;}
+
+    /* Floating badges */
+    .float-b {
+      position: absolute; font-size: 11px; font-weight: 700;
+      padding: 7px 13px; border-radius: 999px;
+      backdrop-filter: blur(12px); white-space: nowrap;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4); z-index: 3;
+    }
+    .fb1 { top: -16px;  left: -20px; background:rgba(99,102,241,.2);  border:1px solid rgba(99,102,241,.4);  color:#a5b4fc; }
+    .fb2 { top: 50%;    right:-24px; background:rgba(16,185,129,.2);   border:1px solid rgba(16,185,129,.4);  color:#6ee7b7; transform:translateY(-50%); }
+    .fb3 { bottom:-14px;left: 40px;  background:rgba(6,182,212,.2);    border:1px solid rgba(6,182,212,.4);   color:#67e8f9; }
+
+    /* ── STATS ── */
+    .stats-bar {
+      position: relative; z-index: 1;
+      border: 1px solid var(--border); border-radius: 18px;
+      display: grid; grid-template-columns: repeat(4,1fr);
+      margin-bottom: 100px; overflow: hidden;
+    }
+    .stat {
+      padding: 30px 20px; text-align: center;
+      border-right: 1px solid var(--border);
+      transition: background .2s;
+    }
+    .stat:last-child { border-right: none; }
+    .stat:hover { background: var(--surface); }
+    .stat-val { font-size: 30px; font-weight: 800; letter-spacing: -.03em; margin-bottom: 5px; display: block; }
+    .c-i { color: var(--pl); } .c-c { color: var(--cyan); } .c-g { color: var(--green); } .c-v { color: #a78bfa; }
+    .stat-lbl { font-size: 12px; color: var(--muted); font-weight: 500; }
+
+    /* ── SECTION HEADERS ── */
+    .sec-hd { text-align: center; margin-bottom: 60px; }
+    .sec-pill {
+      display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--pl); background: rgba(99,102,241,.10); border: 1px solid rgba(99,102,241,.22);
+      border-radius: 999px; padding: 4px 13px; margin-bottom: 16px;
+    }
+    .sec-hd h2 { font-size: 38px; font-weight: 800; letter-spacing: -.03em; margin-bottom: 10px; }
+    .sec-hd p  { font-size: 15px; color: var(--text2); max-width: 500px; margin: 0 auto; line-height: 1.65; }
+
+    /* ── ENDPOINTS ── */
+    .ep-grid {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 14px; margin-bottom: 100px;
+    }
+    .ep-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 26px;
+      transition: all .25s; position: relative; overflow: hidden;
+      transform-style: preserve-3d;
+    }
+    .ep-card::before {
+      content: ''; position: absolute; inset: 0; opacity: 0;
+      background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(99,102,241,.12), transparent 60%);
+      transition: opacity .3s; border-radius: 16px;
+    }
+    .ep-card:hover::before { opacity: 1; }
+    .ep-card:hover { border-color: var(--border2); box-shadow: 0 16px 48px rgba(0,0,0,.4); }
+    .ep-card:hover .ep-arr { opacity: 1; transform: translateX(0); }
+    .ep-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .ep-badges { display: flex; align-items: center; gap: 7px; }
+    .ep-method {
+      font-size: 9px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+      padding: 3px 9px; border-radius: 5px;
+    }
+    .m-get  { background:rgba(16,185,129,.12);  color:var(--green); border:1px solid rgba(16,185,129,.22); }
+    .m-post { background:rgba(99,102,241,.12);  color:var(--pl);    border:1px solid rgba(99,102,241,.22); }
+    .m-del  { background:rgba(239,68,68,.12);   color:#f87171;      border:1px solid rgba(239,68,68,.22); }
+    .ep-path { font-size: 13px; font-weight: 700; font-family: 'SF Mono',monospace; color: var(--text2); }
+    .ep-arr { color:var(--muted); opacity:0; transform:translateX(-6px); transition:all .2s; font-size:14px; }
+    .ep-icon { font-size: 28px; margin-bottom: 12px; }
+    .ep-title { font-size: 14px; font-weight: 700; margin-bottom: 7px; }
+    .ep-desc  { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+    /* ── STEPS ── */
+    .steps-sec { margin-bottom: 100px; }
+    .steps-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 0; position: relative; }
+    .steps-grid::before {
+      content: ''; position: absolute; top: 27px;
+      left: calc(16.67% + 16px); right: calc(16.67% + 16px);
+      height: 1px; background: linear-gradient(90deg, var(--p), var(--cyan)); opacity: .25;
+    }
+    .step { text-align: center; padding: 0 32px; }
+    .step-num {
+      width: 56px; height: 56px; border-radius: 14px; margin: 0 auto 22px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 800; position: relative;
+    }
+    .sn1 { background:rgba(99,102,241,.12); border:1px solid rgba(99,102,241,.28); color:var(--pl); }
+    .sn2 { background:rgba(139,92,246,.12); border:1px solid rgba(139,92,246,.28); color:#a78bfa; }
+    .sn3 { background:rgba(6,182,212,.12);  border:1px solid rgba(6,182,212,.28);  color:var(--cyan); }
+    .step h3 { font-size: 16px; font-weight: 700; margin-bottom: 9px; }
+    .step p   { font-size: 13px; color: var(--text2); line-height: 1.65; }
+    code { font-family: 'SF Mono',monospace; font-size: 11.5px; }
+
+    /* ── PROVIDERS ── */
+    .prov-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 100px; }
+    .prov-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 18px; padding: 34px; transition: all .25s; position: relative; overflow: hidden;
+      transform-style: preserve-3d;
+    }
+    .prov-card:hover { border-color: var(--border2); box-shadow: 0 20px 56px rgba(0,0,0,.35); }
+    .prov-hd { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+    .prov-logo { width: 50px; height: 50px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    .pl-c { background:rgba(255,154,76,.12); border:1px solid rgba(255,154,76,.22); }
+    .pl-o { background:rgba(16,185,129,.12); border:1px solid rgba(16,185,129,.22); }
+    .prov-name  { font-size: 18px; font-weight: 700; margin-bottom: 3px; }
+    .prov-model { font-size: 11px; color: var(--muted); font-family: monospace; }
+    .prov-desc  { font-size: 13px; color: var(--text2); line-height: 1.72; margin-bottom: 22px; }
+    .prov-tags  { display: flex; flex-wrap: wrap; gap: 6px; }
+    .pt { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 6px; }
+    .pt-c { background:rgba(255,154,76,.10); color:#fb923c; border:1px solid rgba(255,154,76,.18); }
+    .pt-o { background:rgba(16,185,129,.10); color:var(--green); border:1px solid rgba(16,185,129,.18); }
+
+    /* ── CODE ── */
+    .code-sec { margin-bottom: 100px; }
+    .code-card {
+      background: #060d1f; border: 1px solid var(--border2);
+      border-radius: 18px; overflow: hidden;
+      box-shadow: 0 28px 72px rgba(0,0,0,.6);
+    }
+    .code-top {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px; border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,.02);
+    }
+    .code-tabs { display: flex; }
+    .ctab {
+      padding: 13px 16px; font-size: 12px; font-weight: 600;
+      color: var(--muted); border-bottom: 2px solid transparent;
+      cursor: pointer; transition: all .18s; user-select: none;
+    }
+    .ctab.on { color: var(--text); border-bottom-color: var(--p); }
+    .copy-btn {
+      font-size: 11px; font-weight: 600; color: var(--muted);
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 5px 13px; border-radius: 7px; cursor: pointer; transition: all .18s;
+    }
+    .copy-btn:hover { color: var(--text); border-color: var(--border2); }
+    .copy-btn.copied { color: var(--green); border-color: rgba(16,185,129,.4); }
+    .code-panel { padding: 30px 32px; overflow-x: auto; display: none; }
+    .code-panel.on { display: block; }
+    pre { font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 13px; line-height: 1.85; white-space: pre; }
+    .cc{color:#374151;} .cm{color:#10b981;} .ch{color:#f59e0b;} .cv{color:#34d399;} .cj{color:#6b7280;} .ck{color:#c084fc;} .cs{color:#fbbf24;} .cu{color:#818cf8;}
+
+    /* ── CTA ── */
+    .cta-sec {
+      position: relative; z-index: 1;
+      background: linear-gradient(135deg, rgba(99,102,241,.12), rgba(6,182,212,.07));
+      border: 1px solid rgba(99,102,241,.22); border-radius: 22px;
+      padding: 72px 48px; text-align: center; margin-bottom: 80px; overflow: hidden;
+    }
+    .cta-sec::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--p), var(--cyan), transparent);
+    }
+    .cta-sec h2 { font-size: 40px; font-weight: 800; letter-spacing: -.03em; margin-bottom: 12px; }
+    .cta-sec p  { font-size: 16px; color: var(--text2); margin-bottom: 36px; }
+    .cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+    /* ── FOOTER ── */
+    footer { border-top: 1px solid var(--border); padding: 44px 0; position: relative; z-index: 1; }
+    .foot-in { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+    .foot-brand { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; }
+    .foot-name  { font-size: 14px; font-weight: 700; }
+    .foot-copy  { font-size: 12px; color: var(--muted); }
+    .foot-links { display: flex; gap: 24px; flex-wrap: wrap; }
+    .foot-links a { font-size: 13px; color: var(--muted); text-decoration: none; font-weight: 500; transition: color .18s; }
+    .foot-links a:hover { color: var(--text); }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: var(--bg2); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:960px) {
+      .hero-grid { grid-template-columns:1fr; }
+      .card-wrap { display: none; }
+      .ep-grid { grid-template-columns:1fr 1fr; }
+      .prov-grid { grid-template-columns:1fr; }
+      .steps-grid { grid-template-columns:1fr; gap:36px; }
+      .steps-grid::before { display:none; }
+      .stats-bar { grid-template-columns:1fr 1fr; }
+      .stat:nth-child(2){ border-right:none; }
+      .stat:nth-child(1),.stat:nth-child(2){ border-bottom:1px solid var(--border); }
+      .nav-links { display:none; }
+    }
+    @media(max-width:580px) {
+      .ep-grid { grid-template-columns:1fr; }
+      .cta-sec { padding:40px 24px; }
+      h1 { font-size:34px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- WebGL Canvas -->
+<canvas id="webgl"></canvas>
+
+<!-- Orb glows -->
+<div class="orb o1"></div>
+<div class="orb o2"></div>
+<div class="orb o3"></div>
+
+<!-- ── NAV ── -->
+<nav>
+  <div class="nav-in">
+    <a href="/" class="logo">
+      <div class="logo-ico">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="white"/>
+        </svg>
+      </div>
+      <span class="logo-name">Lance AI</span>
+      <span class="logo-tag">API</span>
+    </a>
+    <div class="nav-links">
+      <a href="#endpoints">Endpoints</a>
+      <a href="#providers">Providers</a>
+      <a href="#code">Quickstart</a>
+      <a href="/health">Status</a>
+    </div>
+    <div class="nav-r">
+      <div class="online-pill"><div class="pulse-d"></div>All Systems Online</div>
+      <a href="/docs" class="btn-cta">Open Docs &#8594;</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div class="hero-l">
+        <div class="eyebrow"><div class="eyebrow-dot"></div>Production-Ready &nbsp;&#183;&nbsp; v2.0</div>
+        <h1>
+          <span class="line1">AI Infrastructure</span><br/>
+          <span class="line2">for Modern</span><br/>
+          <span class="line3 grad-text">Builders.</span>
+        </h1>
+        <p class="hero-sub">
+          A dual-provider AI API backed by Claude and GPT&#8209;4o.
+          One endpoint. Real-time responses. Zero setup friction. Built to ship.
+        </p>
+        <div class="hero-btns">
+          <a href="/docs" class="btn-primary">&#9889; Try in Docs</a>
+          <a href="/health" class="btn-outline">&#128314; Health Check</a>
+        </div>
+        <div class="trust-row">
+          <div class="trust-i"><div class="trust-check">&#10003;</div>FastAPI + Docker</div>
+          <div class="trust-i"><div class="trust-check">&#10003;</div>Deployed on Railway</div>
+          <div class="trust-i"><div class="trust-check">&#10003;</div>API Key Auth</div>
+          <div class="trust-i"><div class="trust-check">&#10003;</div>Rate Limited</div>
+        </div>
+      </div>
+
+      <div class="hero-r" style="position:relative;">
+        <div class="card-wrap" id="cardWrap">
+          <div class="card-3d" id="card3d">
+            <div class="card-shine" id="cardShine"></div>
+            <div class="card-bar">
+              <div class="card-dots"><div class="cd cd-r"></div><div class="cd cd-y"></div><div class="cd cd-g"></div></div>
+              <div class="card-url">lance-ai-api-production.up.railway.app</div>
+            </div>
+            <div class="card-body">
+              <div class="clabel">Request</div>
+              <div class="req-blk">
+<span class="c-m">POST</span> <span class="c-p">/ask</span>
+<span class="c-d">X-API-Key:</span> <span class="c-s">&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;</span>
+
+<span class="c-d">{</span>
+  <span class="c-p">"question"</span><span class="c-d">:</span> <span class="c-s">"What is RAG?"</span><span class="c-d">,</span>
+  <span class="c-p">"provider"</span><span class="c-d">:</span> <span class="c-s">"claude"</span>
+<span class="c-d">}</span>
+              </div>
+              <div class="clabel">Response</div>
+              <div class="ok-row">
+                <span class="ok-b">&#10003; 200 OK</span>
+                <span class="ok-ms">318ms</span>
+              </div>
+              <div class="res-blk">
+<span class="c-d">{</span>
+  <span class="c-p">"answer"</span><span class="c-d">:</span> <span class="c-s">"RAG combines retrieval
+  with generation to ground
+  AI in real data..."</span><span class="c-d">,</span>
+  <span class="c-p">"tokens_used"</span><span class="c-d">:</span> <span class="c-n">187</span>
+<span class="c-d">}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Floating badges -->
+          <div class="float-b fb1" id="fb1">&#9889; Claude Haiku</div>
+          <div class="float-b fb2" id="fb2">&#128994; GPT&#8209;4o Mini</div>
+          <div class="float-b fb3" id="fb3">&#10003; 200 OK &middot; 318ms</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── STATS ── -->
+<div class="container">
+  <div class="stats-bar" id="statsBar">
+    <div class="stat">
+      <span class="stat-val c-i" data-count="2">0</span>
+      <div class="stat-lbl">AI Providers</div>
+    </div>
+    <div class="stat">
+      <span class="stat-val c-c" data-suffix="/min" data-count="20">0</span>
+      <div class="stat-lbl">Rate Limit</div>
+    </div>
+    <div class="stat">
+      <span class="stat-val c-g" data-suffix=" msg" data-count="20">0</span>
+      <div class="stat-lbl">Chat Memory</div>
+    </div>
+    <div class="stat">
+      <span class="stat-val c-v">HTTPS</span>
+      <div class="stat-lbl">End-to-End Encrypted</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ENDPOINTS ── -->
+<div class="container" id="endpoints">
+  <div class="sec-hd">
+    <div class="sec-pill">Endpoints</div>
+    <h2>Everything you need to build</h2>
+    <p>Five focused endpoints. No bloat. No setup friction. Swap providers per request.</p>
+  </div>
+  <div class="ep-grid">
+
+    <div class="ep-card" data-tilt data-tilt-max="12" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.15">
+      <div class="ep-top">
+        <div class="ep-badges"><span class="ep-method m-get">GET</span><span class="ep-path">/health</span></div>
+        <span class="ep-arr">&#8594;</span>
+      </div>
+      <div class="ep-icon">&#128314;</div>
+      <div class="ep-title">Health Check</div>
+      <div class="ep-desc">Live status endpoint. Returns version, timestamp, provider status. No auth required.</div>
+    </div>
+
+    <div class="ep-card" data-tilt data-tilt-max="12" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.15">
+      <div class="ep-top">
+        <div class="ep-badges"><span class="ep-method m-post">POST</span><span class="ep-path">/ask</span></div>
+        <span class="ep-arr">&#8594;</span>
+      </div>
+      <div class="ep-icon">&#129504;</div>
+      <div class="ep-title">Single-Turn Q&amp;A</div>
+      <div class="ep-desc">Send a question and optional context. Get a precise AI answer back in one round trip.</div>
+    </div>
+
+    <div class="ep-card" data-tilt data-tilt-max="12" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.15">
+      <div class="ep-top">
+        <div class="ep-badges"><span class="ep-method m-post">POST</span><span class="ep-path">/chat</span></div>
+        <span class="ep-arr">&#8594;</span>
+      </div>
+      <div class="ep-icon">&#128172;</div>
+      <div class="ep-title">Multi-Turn Chat</div>
+      <div class="ep-desc">Stateful conversations with 20-message rolling memory. Pass session_id to continue.</div>
+    </div>
+
+    <div class="ep-card" data-tilt data-tilt-max="12" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.15">
+      <div class="ep-top">
+        <div class="ep-badges"><span class="ep-method m-get">GET</span><span class="ep-path">/models</span></div>
+        <span class="ep-arr">&#8594;</span>
+      </div>
+      <div class="ep-icon">&#128225;</div>
+      <div class="ep-title">Model Registry</div>
+      <div class="ep-desc">Lists available providers, model IDs, and live availability for each configured provider.</div>
+    </div>
+
+    <div class="ep-card" data-tilt data-tilt-max="12" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.15">
+      <div class="ep-top">
+        <div class="ep-badges"><span class="ep-method m-get">GET</span><span class="ep-path">/session/{id}</span></div>
+        <span class="ep-arr">&#8594;</span>
+      </div>
+      <div class="ep-icon">&#128196;</div>
+      <div class="ep-title">Session History</div>
+      <div class="ep-desc">Retrieve the full conversation history for any active session. Auth required.</div>
+    </div>
+
+    <div class="ep-card" data-tilt data-tilt-max="12" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.15" style="background:linear-gradient(135deg,rgba(99,102,241,.08),rgba(6,182,212,.04));border-color:rgba(99,102,241,.22);">
+      <div class="ep-top">
+        <div class="ep-badges"><span class="ep-method m-del">DELETE</span><span class="ep-path">/session/{id}</span></div>
+        <span class="ep-arr">&#8594;</span>
+      </div>
+      <div class="ep-icon">&#128256;</div>
+      <div class="ep-title">Clear Session</div>
+      <div class="ep-desc">Wipe a conversation from memory. Reset context without changing the session ID.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── HOW IT WORKS ── -->
+<div class="container steps-sec">
+  <div class="sec-hd">
+    <div class="sec-pill">How It Works</div>
+    <h2>First response in under 60 seconds</h2>
+    <p>From zero to live AI in the time it takes to brew coffee.</p>
+  </div>
+  <div class="steps-grid">
+    <div class="step s1">
+      <div class="step-num sn1">1</div>
+      <h3>Get Your API Key</h3>
+      <p>Request access. Add <code style="color:var(--pl)">X-API-Key</code> to your header. Done in 10 seconds.</p>
+    </div>
+    <div class="step s2">
+      <div class="step-num sn2">2</div>
+      <h3>Pick Your Provider</h3>
+      <p>Pass <code style="color:#a78bfa">"provider":"claude"</code> or <code style="color:#a78bfa">"openai"</code> — switch any time, per request.</p>
+    </div>
+    <div class="step s3">
+      <div class="step-num sn3">3</div>
+      <h3>Ship Your Product</h3>
+      <p>Hit <code style="color:var(--cyan)">/ask</code> or <code style="color:var(--cyan)">/chat</code>. Structured AI responses in milliseconds.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── PROVIDERS ── -->
+<div class="container" id="providers">
+  <div class="sec-hd">
+    <div class="sec-pill">Providers</div>
+    <h2>Two models. One API.</h2>
+    <p>Switch between the world's best AI models with a single field — no re-implementation, no SDK swaps.</p>
+  </div>
+  <div class="prov-grid">
+    <div class="prov-card" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.1">
+      <div class="prov-hd">
+        <div class="prov-logo pl-c">&#129000;</div>
+        <div><div class="prov-name">Anthropic Claude</div><div class="prov-model">claude-haiku-4-5</div></div>
+      </div>
+      <p class="prov-desc">Fast, context-aware, and precise. The default provider. Exceptional at complex reasoning, structured outputs, and RAG pipelines. Low latency. High consistency.</p>
+      <div class="prov-tags">
+        <span class="pt pt-c">Default Provider</span>
+        <span class="pt pt-c">RAG-Ready</span>
+        <span class="pt pt-c">Long Context</span>
+        <span class="pt pt-c">Low Latency</span>
+      </div>
+    </div>
+    <div class="prov-card" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.1">
+      <div class="prov-hd">
+        <div class="prov-logo pl-o">&#129001;</div>
+        <div><div class="prov-name">OpenAI GPT-4o</div><div class="prov-model">gpt-4o-mini</div></div>
+      </div>
+      <p class="prov-desc">Cost-efficient and industry-standard. Pass <code style="color:var(--green);font-size:12px">"provider":"openai"</code> to switch instantly. Ideal when clients prefer the OpenAI ecosystem.</p>
+      <div class="prov-tags">
+        <span class="pt pt-o">Drop-in Switch</span>
+        <span class="pt pt-o">Cost Efficient</span>
+        <span class="pt pt-o">GPT-4o Quality</span>
+        <span class="pt pt-o">Industry Standard</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CODE ── -->
+<div class="container code-sec" id="code">
+  <div class="sec-hd">
+    <div class="sec-pill">Quick Start</div>
+    <h2>Hit the API in seconds</h2>
+    <p>Production-ready examples. Copy. Paste. Ship.</p>
+  </div>
+  <div class="code-card">
+    <div class="code-top">
+      <div class="code-tabs">
+        <div class="ctab on" onclick="switchTab('curl',this)">cURL</div>
+        <div class="ctab" onclick="switchTab('python',this)">Python</div>
+        <div class="ctab" onclick="switchTab('js',this)">JavaScript</div>
+      </div>
+      <button class="copy-btn" onclick="copyCode(this)" id="copyBtn">&#9109; Copy</button>
+    </div>
+
+    <div class="code-panel on" id="tab-curl">
+<pre><span class="cc"># Single-turn Q&A ── Claude ──────────────────────────────────────</span>
+<span class="cm">curl</span> -X POST <span class="cu">https://lance-ai-api-production.up.railway.app/ask</span> \
+  -H <span class="ch">"Content-Type: application/json"</span> \
+  -H <span class="ch">"X-API-Key: YOUR_KEY"</span> \
+  -d <span class="cj">'{"question": "What is RAG?", "provider": "claude"}'</span>
+
+<span class="cc"># Multi-turn chat ── start a new session ─────────────────────────</span>
+<span class="cm">curl</span> -X POST <span class="cu">https://lance-ai-api-production.up.railway.app/chat</span> \
+  -H <span class="ch">"Content-Type: application/json"</span> \
+  -H <span class="ch">"X-API-Key: YOUR_KEY"</span> \
+  -d <span class="cj">'{"message": "Hello!", "provider": "openai"}'</span>
+
+<span class="cc"># Custom system prompt ───────────────────────────────────────────</span>
+<span class="cm">curl</span> -X POST <span class="cu">https://lance-ai-api-production.up.railway.app/ask</span> \
+  -H <span class="ch">"Content-Type: application/json"</span> \
+  -H <span class="ch">"X-API-Key: YOUR_KEY"</span> \
+  -d <span class="cj">'{"question": "Review my code", "system": "You are a senior Python engineer. Be blunt.", "provider": "claude"}'</span></pre>
+    </div>
+
+    <div class="code-panel" id="tab-python">
+<pre><span class="cc"># pip install requests</span>
+<span class="ck">import</span> <span class="cu">requests</span>
+
+BASE <span class="cj">=</span> <span class="cs">"https://lance-ai-api-production.up.railway.app"</span>
+HEADERS <span class="cj">=</span> <span class="cj">{</span>
+    <span class="cs">"X-API-Key"</span><span class="cj">:</span> <span class="cs">"YOUR_KEY"</span><span class="cj">,</span>
+    <span class="cs">"Content-Type"</span><span class="cj">:</span> <span class="cs">"application/json"</span>
+<span class="cj">}</span>
+
+<span class="cc"># Single-turn Q&A</span>
+r <span class="cj">=</span> requests.post(f<span class="cs">"{BASE}/ask"</span>, headers<span class="cj">=</span>HEADERS, json<span class="cj">={</span>
+    <span class="cs">"question"</span><span class="cj">:</span> <span class="cs">"What is RAG?"</span><span class="cj">,</span>
+    <span class="cs">"provider"</span><span class="cj">:</span> <span class="cs">"claude"</span>
+<span class="cj">})</span>
+print(r.json()[<span class="cs">"answer"</span>])
+
+<span class="cc"># Multi-turn chat</span>
+r <span class="cj">=</span> requests.post(f<span class="cs">"{BASE}/chat"</span>, headers<span class="cj">=</span>HEADERS, json<span class="cj">={</span>
+    <span class="cs">"message"</span><span class="cj">:</span> <span class="cs">"Hello!"</span><span class="cj">,</span> <span class="cs">"provider"</span><span class="cj">:</span> <span class="cs">"openai"</span>
+<span class="cj">})</span>
+session_id <span class="cj">=</span> r.json()[<span class="cs">"session_id"</span>]  <span class="cc"># save for next message</span></pre>
+    </div>
+
+    <div class="code-panel" id="tab-js">
+<pre><span class="cc">// Single-turn Q&A</span>
+<span class="ck">const</span> BASE <span class="cj">=</span> <span class="cs">'https://lance-ai-api-production.up.railway.app'</span><span class="cj">;</span>
+
+<span class="ck">const</span> r <span class="cj">=</span> <span class="ck">await</span> fetch(<span class="cs">`${BASE}/ask`</span><span class="cj">, {</span>
+  method<span class="cj">:</span> <span class="cs">'POST'</span><span class="cj">,</span>
+  headers<span class="cj">: {</span>
+    <span class="cs">'Content-Type'</span><span class="cj">:</span> <span class="cs">'application/json'</span><span class="cj">,</span>
+    <span class="cs">'X-API-Key'</span><span class="cj">:</span> <span class="cs">'YOUR_KEY'</span>
+  <span class="cj">},</span>
+  body<span class="cj">:</span> JSON.stringify(<span class="cj">{</span>
+    question<span class="cj">:</span> <span class="cs">'What is RAG?'</span><span class="cj">,</span>
+    provider<span class="cj">:</span> <span class="cs">'claude'</span>
+  <span class="cj">})</span>
+<span class="cj">});</span>
+
+<span class="ck">const</span> data <span class="cj">=</span> <span class="ck">await</span> r.json()<span class="cj">;</span>
+console.log(data.answer)<span class="cj">;</span>  <span class="cc">// done!</span></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ── CTA ── -->
+<div class="container">
+  <div class="cta-sec">
+    <h2>Ready to build?</h2>
+    <p>Explore every endpoint, fire live requests, and integrate in minutes.</p>
+    <div class="cta-btns">
+      <a href="/docs" class="btn-primary">&#9889; Open API Reference</a>
+      <a href="/models" class="btn-outline">View Available Models</a>
+    </div>
+  </div>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="container">
+    <div class="foot-in">
+      <div>
+        <div class="foot-brand">
+          <div class="logo-ico" style="width:26px;height:26px;border-radius:7px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+              <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="white"/>
+            </svg>
+          </div>
+          <span class="foot-name">Lance AI API</span>
+        </div>
+        <div class="foot-copy">&#169; 2026 Lance Galicia &nbsp;&#183;&nbsp; AI Engineer &amp; RAG Systems Builder</div>
+      </div>
+      <div class="foot-links">
+        <a href="/docs">API Reference</a>
+        <a href="/health">Health</a>
+        <a href="/models">Models</a>
+        <a href="#endpoints">Endpoints</a>
+        <a href="#code">Quick Start</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ── SCRIPTS ── -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.4/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.4/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vanilla-tilt@1.8.1/dist/vanilla-tilt.min.js"></script>
+<script>
+(function() {
+  /* ── THREE.JS NEURAL NETWORK ── */
+  try {
+    const canvas = document.getElementById('webgl');
+    const W = window.innerWidth, H = window.innerHeight;
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setSize(W, H);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, W / H, 0.1, 100);
+    camera.position.z = 6;
+
+    const N = 90;
+    const pos = new Float32Array(N * 3);
+    const vel = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) {
+      pos[i*3]   = (Math.random() - .5) * 16;
+      pos[i*3+1] = (Math.random() - .5) * 10;
+      pos[i*3+2] = (Math.random() - .5) * 4;
+      vel[i*3]   = (Math.random() - .5) * .004;
+      vel[i*3+1] = (Math.random() - .5) * .004;
+    }
+
+    const ptGeo = new THREE.BufferGeometry();
+    ptGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const ptMat = new THREE.PointsMaterial({ color: 0x6366f1, size: .06, transparent: true, opacity: .75 });
+    scene.add(new THREE.Points(ptGeo, ptMat));
+
+    const maxLines = N * N;
+    const lpos = new Float32Array(maxLines * 6);
+    const lGeo = new THREE.BufferGeometry();
+    lGeo.setAttribute('position', new THREE.BufferAttribute(lpos, 3));
+    const lMat = new THREE.LineBasicMaterial({ color: 0x4f46e5, transparent: true, opacity: .18 });
+    const lines = new THREE.LineSegments(lGeo, lMat);
+    scene.add(lines);
+
+    let mx = 0, my = 0;
+    document.addEventListener('mousemove', e => { mx = (e.clientX/window.innerWidth-.5)*.6; my = (e.clientY/window.innerHeight-.5)*.4; });
+
+    function tick() {
+      requestAnimationFrame(tick);
+      for (let i = 0; i < N; i++) {
+        pos[i*3]   += vel[i*3];
+        pos[i*3+1] += vel[i*3+1];
+        if (Math.abs(pos[i*3])   > 8)   vel[i*3]   *= -1;
+        if (Math.abs(pos[i*3+1]) > 5.5) vel[i*3+1] *= -1;
+      }
+      ptGeo.attributes.position.needsUpdate = true;
+
+      let li = 0;
+      for (let i = 0; i < N; i++) {
+        for (let j = i+1; j < N; j++) {
+          const dx = pos[i*3]-pos[j*3], dy = pos[i*3+1]-pos[j*3+1];
+          if (dx*dx+dy*dy < 6.25 && li < maxLines*6-6) {
+            lpos[li++]=pos[i*3]; lpos[li++]=pos[i*3+1]; lpos[li++]=pos[i*3+2];
+            lpos[li++]=pos[j*3]; lpos[li++]=pos[j*3+1]; lpos[li++]=pos[j*3+2];
+          }
+        }
+      }
+      for (let i = li; i < maxLines*6; i++) lpos[i] = 0;
+      lGeo.attributes.position.needsUpdate = true;
+      lGeo.setDrawRange(0, li/3);
+
+      camera.position.x += (mx - camera.position.x) * .025;
+      camera.position.y += (-my - camera.position.y) * .025;
+      camera.lookAt(scene.position);
+      renderer.render(scene, camera);
+    }
+    tick();
+
+    window.addEventListener('resize', () => {
+      const w = window.innerWidth, h = window.innerHeight;
+      camera.aspect = w/h; camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    });
+  } catch(e) { console.warn('Three.js error:', e); }
+
+  /* ── GSAP ANIMATIONS ── */
+  try {
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Hero stagger
+    gsap.fromTo('.line1', {opacity:0,y:50}, {opacity:1,y:0,duration:.9,delay:.1,ease:'power3.out'});
+    gsap.fromTo('.line2', {opacity:0,y:50}, {opacity:1,y:0,duration:.9,delay:.25,ease:'power3.out'});
+    gsap.fromTo('.line3', {opacity:0,y:50}, {opacity:1,y:0,duration:.9,delay:.4,ease:'power3.out'});
+    gsap.fromTo('.hero-sub', {opacity:0,y:20}, {opacity:1,y:0,duration:.8,delay:.6});
+    gsap.fromTo('.hero-btns', {opacity:0,y:20}, {opacity:1,y:0,duration:.8,delay:.75});
+    gsap.fromTo('.trust-row', {opacity:0,y:20}, {opacity:1,y:0,duration:.8,delay:.9});
+    gsap.fromTo('#card3d', {opacity:0,rotationY:25,x:50}, {opacity:1,rotationY:0,x:0,duration:1.2,delay:.4,ease:'power3.out'});
+
+    // Floating badge animations
+    gsap.to('#fb1', {y:-14,duration:2.8,repeat:-1,yoyo:true,ease:'sine.inOut'});
+    gsap.to('#fb2', {y:-10,duration:3.4,repeat:-1,yoyo:true,ease:'sine.inOut',delay:.6});
+    gsap.to('#fb3', {y:-18,duration:2.2,repeat:-1,yoyo:true,ease:'sine.inOut',delay:1.2});
+
+    // Stats bar
+    gsap.fromTo('.stats-bar', {opacity:0,y:30}, {opacity:1,y:0,duration:.8,scrollTrigger:{trigger:'.stats-bar',start:'top 85%'}});
+
+    // Endpoint cards stagger
+    gsap.utils.toArray('.ep-card').forEach((el,i) => {
+      gsap.fromTo(el, {opacity:0,y:40,scale:.96}, {
+        opacity:1,y:0,scale:1,duration:.7,delay:i*.08,
+        scrollTrigger:{trigger:'.ep-grid',start:'top 80%'}
+      });
+    });
+
+    // Steps
+    gsap.utils.toArray('.step').forEach((el,i) => {
+      gsap.fromTo(el, {opacity:0,y:40}, {
+        opacity:1,y:0,duration:.8,delay:i*.15,
+        scrollTrigger:{trigger:'.steps-grid',start:'top 75%'}
+      });
+    });
+
+    // Provider cards
+    gsap.utils.toArray('.prov-card').forEach((el,i) => {
+      gsap.fromTo(el, {opacity:0,x:i===0?-40:40}, {
+        opacity:1,x:0,duration:.8,
+        scrollTrigger:{trigger:'.prov-grid',start:'top 80%'}
+      });
+    });
+
+    // Code section
+    gsap.fromTo('.code-card', {opacity:0,y:30}, {
+      opacity:1,y:0,duration:.9,
+      scrollTrigger:{trigger:'.code-card',start:'top 80%'}
+    });
+
+    // CTA
+    gsap.fromTo('.cta-sec', {opacity:0,scale:.97}, {
+      opacity:1,scale:1,duration:.8,
+      scrollTrigger:{trigger:'.cta-sec',start:'top 85%'}
+    });
+
+  } catch(e) { console.warn('GSAP error:', e); }
+
+  /* ── 3D CARD MOUSE TRACKING ── */
+  const wrap = document.getElementById('cardWrap');
+  const card = document.getElementById('card3d');
+  const shine = document.getElementById('cardShine');
+  if (wrap && card) {
+    wrap.addEventListener('mousemove', e => {
+      const r = wrap.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - .5;
+      const y = (e.clientY - r.top)  / r.height - .5;
+      card.style.transform = `perspective(1100px) rotateX(${-y*20}deg) rotateY(${x*24}deg) scale3d(1.03,1.03,1.03)`;
+      if (shine) shine.style.background = `radial-gradient(circle at ${(x+.5)*100}% ${(y+.5)*100}%, rgba(255,255,255,.12) 0%, transparent 65%)`;
+    });
+    wrap.addEventListener('mouseleave', () => {
+      card.style.transform = 'perspective(1100px) rotateX(0) rotateY(0) scale3d(1,1,1)';
+      if (shine) shine.style.background = 'none';
+    });
+  }
+
+  /* ── COUNTER ANIMATION ── */
+  function runCounters() {
+    document.querySelectorAll('[data-count]').forEach(el => {
+      const target = parseInt(el.dataset.count);
+      const suffix = el.dataset.suffix || '';
+      const dur = 1800, step = 16;
+      let t = 0;
+      const iv = setInterval(() => {
+        t += step;
+        const p = Math.min(t/dur, 1);
+        const eased = p < .5 ? 2*p*p : -1+(4-2*p)*p;
+        el.textContent = Math.round(eased * target) + suffix;
+        if (p >= 1) clearInterval(iv);
+      }, step);
+    });
+  }
+  const ob = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { runCounters(); ob.disconnect(); }});
+  }, {threshold: .5});
+  const sb = document.getElementById('statsBar');
+  if (sb) ob.observe(sb);
+
+  /* ── VANILLA TILT ── */
+  try {
+    VanillaTilt.init(document.querySelectorAll('[data-tilt]'), {
+      max: 12, speed: 400, glare: true, 'max-glare': .15, scale: 1.02
+    });
+  } catch(e) {}
+
+  /* ── TAB SWITCHING ── */
+  window.switchTab = function(id, el) {
+    document.querySelectorAll('.code-panel').forEach(p => p.classList.remove('on'));
+    document.querySelectorAll('.ctab').forEach(t => t.classList.remove('on'));
+    document.getElementById('tab-'+id).classList.add('on');
+    el.classList.add('on');
+  };
+
+  /* ── COPY CODE ── */
+  window.copyCode = function(btn) {
+    const active = document.querySelector('.code-panel.on');
+    if (!active) return;
+    navigator.clipboard.writeText(active.innerText).then(() => {
+      btn.textContent = '✓ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = '⎘ Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  };
+
+  /* ── NAV SCROLL EFFECT ── */
+  const nav = document.querySelector('nav');
+  window.addEventListener('scroll', () => {
+    nav.style.borderBottomColor = window.scrollY > 10 ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.08)';
+  });
+
+})();
+</script>
+</body>
+</html>
