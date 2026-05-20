@@ -15,9 +15,11 @@ Providers  : claude (claude-haiku-4-5)  |  openai (gpt-4o-mini)
 
 import os
 import uuid
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, validator
@@ -57,6 +59,15 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# ── CORS — allow any frontend to call the API from the browser ─────────────────
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],        # tighten to specific domains in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # ── In-memory chat sessions ────────────────────────────────────────────────────
 _sessions: dict[str, list] = {}
 _MAX_HISTORY = 20
@@ -66,6 +77,7 @@ class AskRequest(BaseModel):
     question: str
     context:  str = ""
     provider: str = "claude"   # "claude" | "openai"
+    system:   str = ""         # optional custom system prompt
 
     @validator("question")
     def validate_question(cls, v):
@@ -80,6 +92,11 @@ class AskRequest(BaseModel):
             raise ValueError("provider must be 'claude' or 'openai'")
         return v
 
+    @validator("system")
+    def validate_system(cls, v):
+        if len(v) > 2000:    raise ValueError("system prompt too long (max 2000 chars)")
+        return v.strip()
+
 
 class AskResponse(BaseModel):
     answer:      str
@@ -91,6 +108,7 @@ class ChatRequest(BaseModel):
     message:    str
     session_id: str = ""       # omit to start a new session
     provider:   str = "claude"
+    system:     str = ""       # optional custom system prompt (applied to whole session)
 
     @validator("message")
     def validate_message(cls, v):
@@ -105,6 +123,11 @@ class ChatRequest(BaseModel):
             raise ValueError("provider must be 'claude' or 'openai'")
         return v
 
+    @validator("system")
+    def validate_system(cls, v):
+        if len(v) > 2000:    raise ValueError("system prompt too long (max 2000 chars)")
+        return v.strip()
+
 
 class ChatResponse(BaseModel):
     reply:       str
@@ -118,25 +141,43 @@ _SYSTEM = "You are a helpful, precise AI assistant. Answer clearly and concisely
 
 
 def _ask_claude(messages: list, system: str = _SYSTEM) -> tuple[str, int]:
-    r = claude_client.messages.create(
-        model="claude-haiku-4-5",
-        max_tokens=800,
-        system=system,
-        messages=messages,
-    )
-    tokens = r.usage.input_tokens + r.usage.output_tokens
-    return r.content[0].text.strip(), tokens
+    try:
+        r = claude_client.messages.create(
+            model="claude-haiku-4-5",
+            max_tokens=800,
+            system=system,
+            messages=messages,
+        )
+        tokens = r.usage.input_tokens + r.usage.output_tokens
+        return r.content[0].text.strip(), tokens
+    except anthropic.AuthenticationError:
+        raise HTTPException(status_code=502, detail="Claude API key is invalid or missing.")
+    except anthropic.RateLimitError:
+        raise HTTPException(status_code=429, detail="Claude rate limit reached. Try again shortly.")
+    except anthropic.APIStatusError as e:
+        raise HTTPException(status_code=502, detail=f"Claude API error: {e.message}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error calling Claude: {str(e)}")
 
 
 def _ask_openai(messages: list, system: str = _SYSTEM) -> tuple[str, int]:
-    full = [{"role": "system", "content": system}] + messages
-    r = openai_client.chat.completions.create(
-        model="gpt-4o-mini",
-        max_tokens=800,
-        messages=full,
-    )
-    tokens = r.usage.prompt_tokens + r.usage.completion_tokens
-    return r.choices[0].message.content.strip(), tokens
+    try:
+        full = [{"role": "system", "content": system}] + messages
+        r = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            max_tokens=800,
+            messages=full,
+        )
+        tokens = r.usage.prompt_tokens + r.usage.completion_tokens
+        return r.choices[0].message.content.strip(), tokens
+    except openai.AuthenticationError:
+        raise HTTPException(status_code=502, detail="OpenAI API key is invalid or missing.")
+    except openai.RateLimitError:
+        raise HTTPException(status_code=429, detail="OpenAI rate limit reached. Try again shortly.")
+    except openai.APIStatusError as e:
+        raise HTTPException(status_code=502, detail=f"OpenAI API error: {e.message}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error calling OpenAI: {str(e)}")
 
 
 def _route(provider: str, messages: list, system: str = _SYSTEM) -> tuple[str, int]:
@@ -152,13 +193,21 @@ def health():
     return {
         "status":    "live",
         "version":   "2.0",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "providers": {
+            "claude": bool(os.getenv("ANTHROPIC_API_KEY")),
+            "openai": bool(os.getenv("OPENAI_API_KEY")),
+        },
+        "sessions_active": len(_sessions),
         "endpoints": {
-            "GET  /":       "landing page",
-            "GET  /health": "health check (JSON)",
-            "GET  /models": "available providers",
-            "POST /ask":    "single-turn Q&A",
-            "POST /chat":   "multi-turn conversation",
-            "GET  /docs":   "interactive API docs",
+            "GET  /":              "landing page",
+            "GET  /health":        "health check (JSON)",
+            "GET  /models":        "available providers",
+            "POST /ask":           "single-turn Q&A",
+            "POST /chat":          "multi-turn conversation",
+            "GET  /session/{id}":  "view conversation history",
+            "DELETE /session/{id}":"clear a conversation",
+            "GET  /docs":          "interactive API docs",
         },
     }
 
@@ -953,7 +1002,7 @@ def ask(
     Optionally pass `context` to ground the answer in specific information.
     Choose `provider`: **claude** (default) or **openai**.
     """
-    system = _SYSTEM
+    system = payload.system if payload.system else _SYSTEM
     if payload.context:
         system += f"\n\nUse only this context to answer:\n{payload.context}"
 
@@ -987,7 +1036,8 @@ def chat(
     if len(history) > _MAX_HISTORY:
         history = history[-_MAX_HISTORY:]
 
-    reply, tokens = _route(payload.provider, history)
+    system = payload.system if payload.system else _SYSTEM
+    reply, tokens = _route(payload.provider, history, system)
 
     history.append({"role": "assistant", "content": reply})
     _sessions[session_id] = history
@@ -998,3 +1048,37 @@ def chat(
         provider=payload.provider,
         tokens_used=tokens,
     )
+
+
+@app.get("/session/{session_id}", tags=["Sessions"])
+def get_session(
+    session_id: str,
+    _: str = Depends(require_key),
+):
+    """
+    Retrieve the full conversation history for a session.
+    Returns a list of {role, content} message objects.
+    """
+    history = _sessions.get(session_id)
+    if history is None:
+        raise HTTPException(status_code=404, detail="Session not found.")
+    return {
+        "session_id":     session_id,
+        "message_count":  len(history),
+        "messages":       history,
+    }
+
+
+@app.delete("/session/{session_id}", tags=["Sessions"])
+def delete_session(
+    session_id: str,
+    _: str = Depends(require_key),
+):
+    """
+    Clear a conversation session from memory.
+    Useful to reset context without starting a new session ID.
+    """
+    if session_id not in _sessions:
+        raise HTTPException(status_code=404, detail="Session not found.")
+    del _sessions[session_id]
+    return {"deleted": True, "session_id": session_id}
