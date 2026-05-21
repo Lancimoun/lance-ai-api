@@ -1,21 +1,29 @@
 """
-Lance's AI API  v2.0
+Lance's AI API  v3.0
 ────────────────────
-Endpoints : GET /          HTML landing page
-            GET /health    health check (JSON)
-            GET /models    show available providers
-            POST /ask      single-turn Q&A  (Claude or OpenAI)
-            POST /chat     multi-turn chat   (Claude or OpenAI)
-            GET /docs      auto-generated Swagger UI
+Endpoints : GET  /              HTML landing page
+            GET  /ping          ultra-light liveness probe (no auth)
+            GET  /health        health check + uptime + usage stats (JSON)
+            GET  /models        available providers + metadata
+            GET  /usage         cumulative usage stats
+            POST /ask           single-turn Q&A  (Claude or OpenAI)
+            POST /chat          multi-turn chat   (Claude or OpenAI)
+            POST /stream        streaming Q&A via Server-Sent Events (SSE)
+            GET  /session/{id}  view conversation history
+            DELETE /session/{id} clear a conversation
+            GET  /docs          interactive API docs (branded Swagger UI)
 
 Auth       : X-API-Key header  (set SERVICE_API_KEY env var; empty = open in dev)
 Rate limit : 20 requests / minute per IP
 Providers  : claude (claude-haiku-4-5)  |  openai (gpt-4o-mini)
+Streaming  : /stream returns SSE  →  data: {"token":"..."}  …  data: {"done":true}
 """
 
 import os
 import uuid
 import pathlib
+import time
+import json
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 
@@ -23,7 +31,7 @@ _BASE = pathlib.Path(__file__).parent
 
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, validator
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -36,10 +44,12 @@ load_dotenv()
 
 # ── Clients ────────────────────────────────────────────────────────────────────
 claude_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY", ""))
+async_claude  = anthropic.AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY", ""))
 openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY", ""))
+async_openai  = openai.AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY", ""))
 
 # ── Auth ───────────────────────────────────────────────────────────────────────
-_SERVICE_KEY = os.getenv("SERVICE_API_KEY", "")          # empty = no auth (local dev)
+_SERVICE_KEY = os.getenv("SERVICE_API_KEY", "")
 _key_header  = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 def require_key(key: str = Depends(_key_header)):
@@ -50,6 +60,29 @@ def require_key(key: str = Depends(_key_header)):
 # ── Rate limiting ──────────────────────────────────────────────────────────────
 limiter = Limiter(key_func=get_remote_address, default_limits=["20/minute"])
 
+# ── Uptime + Usage tracking ────────────────────────────────────────────────────
+_START_TIME: float = time.time()
+_usage: dict = {
+    "total_requests": 0,
+    "total_tokens":   0,
+    "by_provider":    {"claude": 0, "openai": 0},
+    "by_endpoint":    {"ask": 0, "chat": 0, "stream": 0},
+}
+
+def _uptime() -> str:
+    up = int(time.time() - _START_TIME)
+    h, r = divmod(up, 3600)
+    m, s = divmod(r, 60)
+    return f"{h}h {m}m {s}s"
+
+def _record(provider: str, endpoint: str, tokens: int = 0) -> None:
+    _usage["total_requests"] += 1
+    _usage["total_tokens"]   += tokens
+    if provider in _usage["by_provider"]:
+        _usage["by_provider"][provider] += 1
+    if endpoint in _usage["by_endpoint"]:
+        _usage["by_endpoint"][endpoint] += 1
+
 # ── App ────────────────────────────────────────────────────────────────────────
 app = FastAPI(
     title="Lance's AI API",
@@ -57,17 +90,16 @@ app = FastAPI(
         "A production-ready AI API supporting Claude (Anthropic) and GPT (OpenAI). "
         "Built by Lance Galicia — AI Engineer & RAG Systems Builder."
     ),
-    version="2.0",
-    docs_url=None,    # we serve our own branded /docs
-    redoc_url=None,   # disable redoc
+    version="3.0",
+    docs_url=None,
+    redoc_url=None,
 )
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# ── CORS — allow any frontend to call the API from the browser ─────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],        # tighten to specific domains in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -81,14 +113,14 @@ _MAX_HISTORY = 20
 class AskRequest(BaseModel):
     question: str
     context:  str = ""
-    provider: str = "claude"   # "claude" | "openai"
-    system:   str = ""         # optional custom system prompt
+    provider: str = "claude"
+    system:   str = ""
 
     @validator("question")
     def validate_question(cls, v):
         v = v.strip()
-        if not v:            raise ValueError("question cannot be empty")
-        if len(v) > 4000:    raise ValueError("question too long (max 4000 chars)")
+        if not v:           raise ValueError("question cannot be empty")
+        if len(v) > 4000:   raise ValueError("question too long (max 4000 chars)")
         return v
 
     @validator("provider")
@@ -99,7 +131,7 @@ class AskRequest(BaseModel):
 
     @validator("system")
     def validate_system(cls, v):
-        if len(v) > 2000:    raise ValueError("system prompt too long (max 2000 chars)")
+        if len(v) > 2000:   raise ValueError("system prompt too long (max 2000 chars)")
         return v.strip()
 
 
@@ -111,15 +143,15 @@ class AskResponse(BaseModel):
 
 class ChatRequest(BaseModel):
     message:    str
-    session_id: str = ""       # omit to start a new session
+    session_id: str = ""
     provider:   str = "claude"
-    system:     str = ""       # optional custom system prompt (applied to whole session)
+    system:     str = ""
 
     @validator("message")
     def validate_message(cls, v):
         v = v.strip()
-        if not v:            raise ValueError("message cannot be empty")
-        if len(v) > 4000:    raise ValueError("message too long (max 4000 chars)")
+        if not v:           raise ValueError("message cannot be empty")
+        if len(v) > 4000:   raise ValueError("message too long (max 4000 chars)")
         return v
 
     @validator("provider")
@@ -130,7 +162,7 @@ class ChatRequest(BaseModel):
 
     @validator("system")
     def validate_system(cls, v):
-        if len(v) > 2000:    raise ValueError("system prompt too long (max 2000 chars)")
+        if len(v) > 2000:   raise ValueError("system prompt too long (max 2000 chars)")
         return v.strip()
 
 
@@ -193,27 +225,59 @@ def _route(provider: str, messages: list, system: str = _SYSTEM) -> tuple[str, i
 
 # ── Routes ─────────────────────────────────────────────────────────────────────
 
+@app.get("/ping", tags=["Health"])
+def ping():
+    """Ultra-light liveness probe. No auth required. Use for uptime monitors."""
+    return {"pong": True, "uptime_seconds": int(time.time() - _START_TIME)}
+
+
 @app.get("/health", tags=["Health"])
 def health():
+    """Full health check — uptime, provider status, rate limit config, and usage stats."""
     return {
-        "status":    "live",
-        "version":   "2.0",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "status":          "live",
+        "version":         "3.0",
+        "environment":     "production" if _SERVICE_KEY else "development",
+        "timestamp":       datetime.now(timezone.utc).isoformat(),
+        "uptime":          _uptime(),
+        "uptime_seconds":  int(time.time() - _START_TIME),
+        "rate_limit":      "20 requests/minute per IP",
         "providers": {
-            "claude": bool(os.getenv("ANTHROPIC_API_KEY")),
-            "openai": bool(os.getenv("OPENAI_API_KEY")),
+            "claude": {
+                "available": bool(os.getenv("ANTHROPIC_API_KEY")),
+                "model":     "claude-haiku-4-5",
+            },
+            "openai": {
+                "available": bool(os.getenv("OPENAI_API_KEY")),
+                "model":     "gpt-4o-mini",
+            },
         },
         "sessions_active": len(_sessions),
+        "usage":           _usage,
         "endpoints": {
-            "GET  /":              "landing page",
-            "GET  /health":        "health check (JSON)",
-            "GET  /models":        "available providers",
-            "POST /ask":           "single-turn Q&A",
-            "POST /chat":          "multi-turn conversation",
-            "GET  /session/{id}":  "view conversation history",
-            "DELETE /session/{id}":"clear a conversation",
-            "GET  /docs":          "interactive API docs",
+            "GET  /":               "landing page",
+            "GET  /ping":           "liveness probe (no auth)",
+            "GET  /health":         "health check (JSON)",
+            "GET  /models":         "available providers + metadata",
+            "GET  /usage":          "cumulative usage stats",
+            "POST /ask":            "single-turn Q&A",
+            "POST /chat":           "multi-turn conversation",
+            "POST /stream":         "streaming Q&A via SSE",
+            "GET  /session/{id}":   "view conversation history",
+            "DELETE /session/{id}": "clear a conversation",
+            "GET  /docs":           "interactive API docs",
         },
+    }
+
+
+@app.get("/usage", tags=["Info"])
+def usage_endpoint(_: str = Depends(require_key)):
+    """Cumulative request and token usage since last deploy."""
+    return {
+        **_usage,
+        "sessions_active": len(_sessions),
+        "uptime_seconds":  int(time.time() - _START_TIME),
+        "uptime":          _uptime(),
     }
 
 
@@ -237,14 +301,23 @@ def root():
 
 @app.get("/models", tags=["Info"])
 def models():
+    """Available AI providers, their models, capabilities, and context windows."""
     return {
         "claude": {
-            "model":     "claude-haiku-4-5",
-            "available": bool(os.getenv("ANTHROPIC_API_KEY")),
+            "model":          "claude-haiku-4-5",
+            "provider":       "Anthropic",
+            "available":      bool(os.getenv("ANTHROPIC_API_KEY")),
+            "context_window": 200_000,
+            "max_output":     800,
+            "strengths":      ["fast", "cost-efficient", "RAG-ready", "200K context"],
         },
         "openai": {
-            "model":     "gpt-4o-mini",
-            "available": bool(os.getenv("OPENAI_API_KEY")),
+            "model":          "gpt-4o-mini",
+            "provider":       "OpenAI",
+            "available":      bool(os.getenv("OPENAI_API_KEY")),
+            "context_window": 128_000,
+            "max_output":     800,
+            "strengths":      ["code generation", "reasoning", "tool-use", "JSON mode"],
         },
     }
 
@@ -258,8 +331,10 @@ def ask(
 ):
     """
     Single-turn Q&A. Send a question, get an answer.
-    Optionally pass `context` to ground the answer in specific information.
-    Choose `provider`: **claude** (default) or **openai**.
+
+    - Optionally pass `context` to ground the answer in specific information (RAG-style).
+    - Optionally pass `system` to override the default system prompt.
+    - Choose `provider`: **claude** (default) or **openai**.
     """
     system = payload.system if payload.system else _SYSTEM
     if payload.context:
@@ -270,6 +345,7 @@ def ask(
         [{"role": "user", "content": payload.question}],
         system,
     )
+    _record(payload.provider, "ask", tokens)
     return AskResponse(answer=answer, provider=payload.provider, tokens_used=tokens)
 
 
@@ -282,16 +358,16 @@ def chat(
 ):
     """
     Multi-turn conversation with memory.
-    Omit `session_id` to start a new session — the ID is returned in the response.
-    Pass the same `session_id` on follow-up messages to continue the conversation.
-    History is capped at the last 20 messages (in-memory, resets on redeploy).
+
+    - Omit `session_id` to start a new session — the ID is returned in the response.
+    - Pass the same `session_id` on follow-up messages to continue the conversation.
+    - History is capped at the last 20 messages (in-memory, resets on redeploy).
+    - Optionally pass `system` to set a custom persona for the whole session.
     """
     session_id = payload.session_id or str(uuid.uuid4())
-
-    history = _sessions.get(session_id, [])
+    history    = _sessions.get(session_id, [])
     history.append({"role": "user", "content": payload.message})
 
-    # Rolling window
     if len(history) > _MAX_HISTORY:
         history = history[-_MAX_HISTORY:]
 
@@ -301,11 +377,112 @@ def chat(
     history.append({"role": "assistant", "content": reply})
     _sessions[session_id] = history
 
+    _record(payload.provider, "chat", tokens)
     return ChatResponse(
         reply=reply,
         session_id=session_id,
         provider=payload.provider,
         tokens_used=tokens,
+    )
+
+
+@app.post("/stream", tags=["AI"])
+@limiter.limit("20/minute")
+async def stream_ask(
+    request: Request,
+    payload: AskRequest,
+    _: str = Depends(require_key),
+):
+    """
+    Streaming single-turn Q&A via **Server-Sent Events (SSE)**.
+
+    Returns tokens in real-time as they are generated — no waiting for the full response.
+
+    **Event stream format:**
+    ```
+    data: {"token": "Hello"}
+    data: {"token": " world"}
+    data: {"done": true, "tokens_used": 42}
+    ```
+
+    **JavaScript fetch example:**
+    ```js
+    const res = await fetch('/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': 'YOUR_KEY' },
+      body: JSON.stringify({ question: 'What is RAG?' })
+    });
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const lines = decoder.decode(value).split('\\n');
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const d = JSON.parse(line.slice(6));
+          if (d.token) process.stdout.write(d.token);
+        }
+      }
+    }
+    ```
+    """
+    system = payload.system if payload.system else _SYSTEM
+    if payload.context:
+        system += f"\n\nUse only this context to answer:\n{payload.context}"
+
+    # Count the request now; tokens added at end of stream
+    _record(payload.provider, "stream", 0)
+
+    async def generate_claude():
+        try:
+            async with async_claude.messages.stream(
+                model="claude-haiku-4-5",
+                max_tokens=800,
+                system=system,
+                messages=[{"role": "user", "content": payload.question}],
+            ) as stream:
+                async for text in stream.text_stream:
+                    yield f"data: {json.dumps({'token': text})}\n\n"
+                final  = await stream.get_final_message()
+                tokens = final.usage.input_tokens + final.usage.output_tokens
+                _usage["total_tokens"] += tokens
+            yield f"data: {json.dumps({'done': True, 'tokens_used': tokens})}\n\n"
+        except anthropic.AuthenticationError:
+            yield f"data: {json.dumps({'error': 'Claude API key is invalid or missing.'})}\n\n"
+        except anthropic.RateLimitError:
+            yield f"data: {json.dumps({'error': 'Claude rate limit reached. Try again shortly.'})}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+    async def generate_openai():
+        try:
+            stream = await async_openai.chat.completions.create(
+                model="gpt-4o-mini",
+                max_tokens=800,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user",   "content": payload.question},
+                ],
+                stream=True,
+            )
+            async for chunk in stream:
+                delta = chunk.choices[0].delta.content if chunk.choices else None
+                if delta:
+                    yield f"data: {json.dumps({'token': delta})}\n\n"
+            yield f"data: {json.dumps({'done': True})}\n\n"
+        except openai.AuthenticationError:
+            yield f"data: {json.dumps({'error': 'OpenAI API key is invalid or missing.'})}\n\n"
+        except openai.RateLimitError:
+            yield f"data: {json.dumps({'error': 'OpenAI rate limit reached. Try again shortly.'})}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+    gen = generate_claude() if payload.provider == "claude" else generate_openai()
+    return StreamingResponse(
+        gen,
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
 
 
@@ -322,9 +499,9 @@ def get_session(
     if history is None:
         raise HTTPException(status_code=404, detail="Session not found.")
     return {
-        "session_id":     session_id,
-        "message_count":  len(history),
-        "messages":       history,
+        "session_id":    session_id,
+        "message_count": len(history),
+        "messages":      history,
     }
 
 
@@ -335,7 +512,7 @@ def delete_session(
 ):
     """
     Clear a conversation session from memory.
-    Useful to reset context without starting a new session ID.
+    Useful to reset context without changing the session ID.
     """
     if session_id not in _sessions:
         raise HTTPException(status_code=404, detail="Session not found.")
