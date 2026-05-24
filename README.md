@@ -9,9 +9,9 @@
 [![Railway](https://img.shields.io/badge/Railway-0B0D0E?style=flat-square&logo=railway)](https://railway.app)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
 
-**Live:** [lance-ai-api-production.up.railway.app](https://lance-ai-api-production.up.railway.app)
-**Docs:** [lance-ai-api-production.up.railway.app/docs](https://lance-ai-api-production.up.railway.app/docs)
-**Health:** [lance-ai-api-production.up.railway.app/health](https://lance-ai-api-production.up.railway.app/health)
+**Live:** [axiom-ai-production-aaec.up.railway.app](https://axiom-ai-production-aaec.up.railway.app)
+**Docs:** [axiom-ai-production-aaec.up.railway.app/docs](https://axiom-ai-production-aaec.up.railway.app/docs)
+**Health:** [axiom-ai-production-aaec.up.railway.app/health](https://axiom-ai-production-aaec.up.railway.app/health)
 
 ---
 
@@ -45,19 +45,19 @@ Built with production concerns from day one: API key auth, per-IP rate limiting,
 
 ```bash
 # Single-turn Q&A — Claude
-curl -X POST https://lance-ai-api-production.up.railway.app/ask \
+curl -X POST https://axiom-ai-production-aaec.up.railway.app/ask \
   -H "Content-Type: application/json" \
   -H "X-API-Key: YOUR_KEY" \
   -d '{"question": "What is RAG?", "provider": "claude"}'
 
 # Multi-turn chat — OpenAI
-curl -X POST https://lance-ai-api-production.up.railway.app/chat \
+curl -X POST https://axiom-ai-production-aaec.up.railway.app/chat \
   -H "Content-Type: application/json" \
   -H "X-API-Key: YOUR_KEY" \
   -d '{"message": "Hello!", "provider": "openai"}'
 
 # Real-time streaming
-curl -N -X POST https://lance-ai-api-production.up.railway.app/stream \
+curl -N -X POST https://axiom-ai-production-aaec.up.railway.app/stream \
   -H "Content-Type: application/json" \
   -H "X-API-Key: YOUR_KEY" \
   -d '{"question": "Explain transformers", "provider": "claude"}'

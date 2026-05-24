@@ -468,7 +468,7 @@
             <div class="card-shine" id="cardShine"></div>
             <div class="card-bar">
               <div class="card-dots"><div class="cd cd-r"></div><div class="cd cd-y"></div><div class="cd cd-g"></div></div>
-              <div class="card-url">axiom-ai-production.up.railway.app</div>
+              <div class="card-url">axiom-ai-production-aaec.up.railway.app</div>
             </div>
             <div class="card-body">
               <div class="clabel">Request</div>
@@ -683,19 +683,19 @@
 
     <div class="code-panel on" id="tab-curl">
 <pre><span class="cc"># Single-turn Q&A ── Claude ──────────────────────────────────────</span>
-<span class="cm">curl</span> -X POST <span class="cu">https://lance-ai-api-production.up.railway.app/ask</span> \
+<span class="cm">curl</span> -X POST <span class="cu">https://axiom-ai-production-aaec.up.railway.app/ask</span> \
   -H <span class="ch">"Content-Type: application/json"</span> \
   -H <span class="ch">"X-API-Key: YOUR_KEY"</span> \
   -d <span class="cj">'{"question": "What is RAG?", "provider": "claude"}'</span>
 
 <span class="cc"># Multi-turn chat ── start a new session ─────────────────────────</span>
-<span class="cm">curl</span> -X POST <span class="cu">https://lance-ai-api-production.up.railway.app/chat</span> \
+<span class="cm">curl</span> -X POST <span class="cu">https://axiom-ai-production-aaec.up.railway.app/chat</span> \
   -H <span class="ch">"Content-Type: application/json"</span> \
   -H <span class="ch">"X-API-Key: YOUR_KEY"</span> \
   -d <span class="cj">'{"message": "Hello!", "provider": "openai"}'</span>
 
 <span class="cc"># Custom system prompt ───────────────────────────────────────────</span>
-<span class="cm">curl</span> -X POST <span class="cu">https://lance-ai-api-production.up.railway.app/ask</span> \
+<span class="cm">curl</span> -X POST <span class="cu">https://axiom-ai-production-aaec.up.railway.app/ask</span> \
   -H <span class="ch">"Content-Type: application/json"</span> \
   -H <span class="ch">"X-API-Key: YOUR_KEY"</span> \
   -d <span class="cj">'{"question": "Review my code", "system": "You are a senior Python engineer. Be blunt.", "provider": "claude"}'</span></pre>
@@ -705,7 +705,7 @@
 <pre><span class="cc"># pip install requests</span>
 <span class="ck">import</span> <span class="cu">requests</span>
 
-BASE <span class="cj">=</span> <span class="cs">"https://lance-ai-api-production.up.railway.app"</span>
+BASE <span class="cj">=</span> <span class="cs">"https://axiom-ai-production-aaec.up.railway.app"</span>
 HEADERS <span class="cj">=</span> <span class="cj">{</span>
     <span class="cs">"X-API-Key"</span><span class="cj">:</span> <span class="cs">"YOUR_KEY"</span><span class="cj">,</span>
     <span class="cs">"Content-Type"</span><span class="cj">:</span> <span class="cs">"application/json"</span>
@@ -727,7 +727,7 @@ session_id <span class="cj">=</span> r.json()[<span class="cs">"session_id"</spa
 
     <div class="code-panel" id="tab-js">
 <pre><span class="cc">// Single-turn Q&A</span>
-<span class="ck">const</span> BASE <span class="cj">=</span> <span class="cs">'https://lance-ai-api-production.up.railway.app'</span><span class="cj">;</span>
+<span class="ck">const</span> BASE <span class="cj">=</span> <span class="cs">'https://axiom-ai-production-aaec.up.railway.app'</span><span class="cj">;</span>
 
 <span class="ck">const</span> r <span class="cj">=</span> <span class="ck">await</span> fetch(<span class="cs">`${BASE}/ask`</span><span class="cj">, {</span>
   method<span class="cj">:</span> <span class="cs">'POST'</span><span class="cj">,</span>
