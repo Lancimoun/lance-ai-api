@@ -281,6 +281,13 @@ def usage_endpoint(_: str = Depends(require_key)):
     }
 
 
+# ── Status page ────────────────────────────────────────────────────────────────
+@app.get("/status", tags=["Health"], response_class=HTMLResponse, include_in_schema=False)
+def status_page():
+    """Beautiful system status dashboard."""
+    return HTMLResponse(content=(_BASE / "templates" / "status.html").read_text(encoding="utf-8"))
+
+
 # ── Custom Swagger UI ──────────────────────────────────────────────────────────
 _DOCS_HTML = (_BASE / "templates" / "docs.html").read_text(encoding="utf-8")
 
