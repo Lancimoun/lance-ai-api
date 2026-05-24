@@ -3,15 +3,17 @@ Axiom AI  v3.0
 ──────────────
 Endpoints : GET  /              HTML landing page
             GET  /ping          ultra-light liveness probe (no auth)
-            GET  /health        health check + uptime + usage stats (JSON)
-            GET  /models        available providers + metadata
-            GET  /usage         cumulative usage stats
+            GET  /health        browser → /status redirect · API → JSON
+            GET  /status        beautiful system status dashboard (HTML)
+            GET  /models        browser → beautiful models page · API → JSON
+            GET  /usage         cumulative usage stats (JSON, auth required)
+            GET  /openapi.json  browser → /docs redirect · API → raw spec
+            GET  /docs          interactive API docs (branded Swagger UI)
             POST /ask           single-turn Q&A  (Claude or OpenAI)
             POST /chat          multi-turn chat   (Claude or OpenAI)
             POST /stream        streaming Q&A via Server-Sent Events (SSE)
             GET  /session/{id}  view conversation history
             DELETE /session/{id} clear a conversation
-            GET  /docs          interactive API docs (branded Swagger UI)
 
 Auth       : X-API-Key header  (set SERVICE_API_KEY env var; empty = open in dev)
 Rate limit : 20 requests / minute per IP
@@ -310,8 +312,12 @@ def root():
 
 
 @app.get("/models", tags=["Info"])
-def models():
-    """Available AI providers, their models, capabilities, and context windows."""
+def models(request: Request):
+    """Available AI providers — browser → beautiful models page · API call → JSON."""
+    if "text/html" in request.headers.get("accept", ""):
+        return HTMLResponse(
+            content=(_BASE / "templates" / "models.html").read_text(encoding="utf-8")
+        )
     return {
         "claude": {
             "model":          "claude-haiku-4-5",
@@ -330,6 +336,15 @@ def models():
             "strengths":      ["code generation", "reasoning", "tool-use", "JSON mode"],
         },
     }
+
+
+@app.get("/openapi.json", include_in_schema=False)
+def openapi_schema(request: Request):
+    """OpenAPI spec — browser → redirects to /docs · API call → raw JSON."""
+    if "text/html" in request.headers.get("accept", ""):
+        return RedirectResponse(url="/docs", status_code=302)
+    from fastapi.responses import JSONResponse
+    return JSONResponse(app.openapi())
 
 
 @app.post("/ask", response_model=AskResponse, tags=["AI"])
