@@ -31,7 +31,7 @@ _BASE = pathlib.Path(__file__).parent
 
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse, RedirectResponse
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, validator
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -232,8 +232,11 @@ def ping():
 
 
 @app.get("/health", tags=["Health"])
-def health():
-    """Full health check — uptime, provider status, rate limit config, and usage stats."""
+def health(request: Request):
+    """Full health check — browser → beautiful status page · API call → raw JSON."""
+    # Browsers send text/html in Accept; redirect them to the pretty status dashboard
+    if "text/html" in request.headers.get("accept", ""):
+        return RedirectResponse(url="/status", status_code=302)
     return {
         "status":          "live",
         "version":         "3.0",

@@ -269,7 +269,8 @@
     .m-post { background:rgba(99,102,241,.12);  color:var(--pl);    border:1px solid rgba(99,102,241,.22); }
     .m-del  { background:rgba(239,68,68,.12);   color:#f87171;      border:1px solid rgba(239,68,68,.22); }
     .ep-path { font-size: 13px; font-weight: 700; font-family: 'SF Mono',monospace; color: var(--text2); }
-    .ep-arr { color:var(--muted); opacity:0; transform:translateX(-6px); transition:all .2s; font-size:14px; }
+    .ep-arr { color:var(--pl); opacity:0; transform:translateX(-6px); transition:all .2s; font-size:14px; font-weight:700; }
+    .ep-card { cursor: pointer; }
     .ep-icon { font-size: 28px; margin-bottom: 12px; }
     .ep-title { font-size: 14px; font-weight: 700; margin-bottom: 7px; }
     .ep-desc  { font-size: 13px; color: var(--text2); line-height: 1.6; }
@@ -367,9 +368,13 @@
     .foot-brand { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; }
     .foot-name  { font-size: 14px; font-weight: 700; }
     .foot-copy  { font-size: 12px; color: var(--muted); }
-    .foot-links { display: flex; gap: 24px; flex-wrap: wrap; }
-    .foot-links a { font-size: 13px; color: var(--muted); text-decoration: none; font-weight: 500; transition: color .18s; }
-    .foot-links a:hover { color: var(--text); }
+    .foot-links { display: flex; gap: 6px; flex-wrap: wrap; }
+    .foot-links a {
+      font-size: 12px; color: var(--text2); text-decoration: none; font-weight: 500;
+      padding: 5px 12px; border-radius: 7px; border: 1px solid transparent;
+      transition: all .18s;
+    }
+    .foot-links a:hover { color: var(--text); background: var(--surface2); border-color: var(--border); }
 
     /* ── SCROLLBAR ── */
     ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: var(--bg2); }
@@ -463,7 +468,7 @@
             <div class="card-shine" id="cardShine"></div>
             <div class="card-bar">
               <div class="card-dots"><div class="cd cd-r"></div><div class="cd cd-y"></div><div class="cd cd-g"></div></div>
-              <div class="card-url">lance-ai-api-production.up.railway.app</div>
+              <div class="card-url">axiom-ai-production.up.railway.app</div>
             </div>
             <div class="card-body">
               <div class="clabel">Request</div>
@@ -992,6 +997,11 @@ console.log(data.answer)<span class="cj">;</span>  <span class="cc">// done!</sp
   const nav = document.querySelector('nav');
   window.addEventListener('scroll', () => {
     nav.style.borderBottomColor = window.scrollY > 10 ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.08)';
+  });
+
+  /* ── ENDPOINT CARDS → OPEN DOCS ── */
+  document.querySelectorAll('.ep-card').forEach(card => {
+    card.addEventListener('click', () => window.location.href = '/docs');
   });
 
 })();

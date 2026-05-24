@@ -236,14 +236,15 @@
       border-radius: 8px !important; padding: 16px !important;
     }
 
-    /* Model / Schema */
+    /* Model / Schema — hide the auto-generated bottom schemas section (ugly boxes) */
+    .swagger-ui section.models { display: none !important; }
+
+    /* Keep inline schema refs inside endpoint responses looking clean */
     .swagger-ui .model-box { background: rgba(255,255,255,0.03) !important; border-radius: 8px !important; }
     .swagger-ui .model-title { color: var(--text) !important; font-weight: 600 !important; }
     .swagger-ui .model { color: var(--text2) !important; font-size: 12px !important; }
     .swagger-ui .prop-type { color: var(--cyan) !important; }
     .swagger-ui .prop-format { color: var(--muted) !important; }
-    .swagger-ui section.models { border: 1px solid var(--border) !important; border-radius: 12px !important; background: var(--bg2) !important; }
-    .swagger-ui section.models h4 { color: var(--text) !important; border-bottom: 1px solid var(--border) !important; font-family: 'Inter' !important; }
     .swagger-ui .model-container { background: var(--bg2) !important; }
 
     /* Auth modal */
@@ -312,10 +313,11 @@
       ],
       layout: 'BaseLayout',
       deepLinking: true,
-      defaultModelsExpandDepth: 1,
-      defaultModelExpandDepth: 1,
+      defaultModelsExpandDepth: -1,
+      defaultModelExpandDepth: -1,
       displayRequestDuration: true,
       filter: true,
+      docExpansion: 'list',
       syntaxHighlight: {
         activate: true,
         theme: 'monokai'
