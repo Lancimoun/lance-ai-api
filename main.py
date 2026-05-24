@@ -1,6 +1,6 @@
 """
-Lance's AI API  v3.0
-────────────────────
+Axiom AI  v3.0
+──────────────
 Endpoints : GET  /              HTML landing page
             GET  /ping          ultra-light liveness probe (no auth)
             GET  /health        health check + uptime + usage stats (JSON)
@@ -85,10 +85,10 @@ def _record(provider: str, endpoint: str, tokens: int = 0) -> None:
 
 # ── App ────────────────────────────────────────────────────────────────────────
 app = FastAPI(
-    title="Lance's AI API",
+    title="Axiom AI",
     description=(
-        "A production-ready AI API supporting Claude (Anthropic) and GPT (OpenAI). "
-        "Built by Lance Galicia — AI Engineer & RAG Systems Builder."
+        "Production-grade AI infrastructure supporting Claude (Anthropic) and GPT (OpenAI). "
+        "One unified API. Two world-class models. Built to ship."
     ),
     version="3.0",
     docs_url=None,
