@@ -1,11 +1,13 @@
 # Axiom AI
 
-**Production-grade AI infrastructure** — Claude (Anthropic) and GPT-4o (OpenAI) behind one clean REST API.
+**Production-grade AI infrastructure** — Claude, GPT-4o, Gemini, and Groq behind one clean REST API. 4 providers. 9 models. One endpoint.
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
-[![Claude](https://img.shields.io/badge/Claude-Haiku_4.5-cc785c?style=flat-square)](https://anthropic.com)
-[![OpenAI](https://img.shields.io/badge/GPT--4o_Mini-412991?style=flat-square&logo=openai&logoColor=white)](https://openai.com)
+[![Claude](https://img.shields.io/badge/Claude-Haiku_4.5_·_Sonnet_4.6_·_Opus_4.7-cc785c?style=flat-square)](https://anthropic.com)
+[![OpenAI](https://img.shields.io/badge/GPT--4o_Mini_·_GPT--4o-412991?style=flat-square&logo=openai&logoColor=white)](https://openai.com)
+[![Gemini](https://img.shields.io/badge/Gemini-2.0_Flash_·_2.5_Pro-4285F4?style=flat-square&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
+[![Groq](https://img.shields.io/badge/Groq-Llama_3.3_·_Mixtral-F55036?style=flat-square)](https://groq.com)
 [![Railway](https://img.shields.io/badge/Railway-0B0D0E?style=flat-square&logo=railway)](https://railway.app)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
 
@@ -17,7 +19,7 @@
 
 ## What It Is
 
-A dual-provider AI API that routes requests to either **Claude (Anthropic)** or **GPT-4o Mini (OpenAI)** behind a single, unified interface. Switch models per-request with one field. No SDK swaps. No re-implementation.
+A quad-provider AI API that routes requests to **Claude (Anthropic)**, **GPT-4o (OpenAI)**, **Gemini (Google)**, or **Groq (LPU)** behind a single, unified interface. Switch providers and models per-request with one field. No SDK swaps. No re-implementation. 9 models total.
 
 Built with production concerns from day one: API key auth, per-IP rate limiting, CORS, real-time SSE streaming, multi-turn session memory, and full usage analytics.
 
@@ -70,7 +72,8 @@ curl -N -X POST https://axiom-ai-production-aaec.up.railway.app/stream \
 | Layer | Technology |
 |---|---|
 | Framework | FastAPI + Uvicorn |
-| AI Providers | Claude Haiku 4.5 (Anthropic) · GPT-4o Mini (OpenAI) |
+| AI Providers | Claude (Anthropic) · GPT-4o (OpenAI) · Gemini (Google) · Groq LPU |
+| Models | 9 total across 4 providers |
 | Streaming | Server-Sent Events (SSE) |
 | Auth | API Key (`X-API-Key` header) |
 | Rate Limiting | slowapi — 20 req/min per IP |
@@ -81,8 +84,9 @@ curl -N -X POST https://axiom-ai-production-aaec.up.railway.app/stream \
 
 ## Features
 
-- **Dual provider** — Claude and GPT-4o behind one API, switchable per request
-- **Streaming** — real-time token-by-token output via SSE
+- **Quad provider** — Claude, GPT-4o, Gemini, and Groq behind one API, switchable per request
+- **9 models** — Haiku 4.5 / Sonnet 4.6 / Opus 4.7 · GPT-4o Mini / GPT-4o · Gemini 2.0 Flash / 2.5 Pro · Llama 3.3 70B / Mixtral 8x7B
+- **Streaming** — real-time token-by-token output via SSE from all 4 providers
 - **Multi-turn chat** — session memory with rolling 20-message window
 - **RAG-ready** — pass `context` to any `/ask` call to ground answers in your data
 - **Custom system prompts** — override persona per request
@@ -96,6 +100,8 @@ curl -N -X POST https://axiom-ai-production-aaec.up.railway.app/stream \
 ```env
 ANTHROPIC_API_KEY=your_anthropic_key
 OPENAI_API_KEY=your_openai_key
+GEMINI_API_KEY=your_gemini_key     # optional — enables Google Gemini
+GROQ_API_KEY=your_groq_key        # optional — enables Groq LPU inference
 SERVICE_API_KEY=your_service_key   # leave empty for open dev access
 ```
 

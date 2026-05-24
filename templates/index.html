@@ -20,6 +20,8 @@
       --cyan:    #06b6d4;
       --green:   #10b981;
       --violet:  #8b5cf6;
+      --gemini:  #4f9cf9;
+      --groq:    #a855f7;
       --text:    #f1f5f9;
       --text2:   #94a3b8;
       --muted:   #475569;
@@ -298,6 +300,7 @@
 
     /* ── PROVIDERS ── */
     .prov-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 100px; }
+    @media(max-width:960px) { .prov-grid { grid-template-columns: 1fr; } }
     .prov-card {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 18px; padding: 34px; transition: all .25s; position: relative; overflow: hidden;
@@ -308,6 +311,8 @@
     .prov-logo { width: 50px; height: 50px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
     .pl-c { background:rgba(255,154,76,.12); border:1px solid rgba(255,154,76,.22); }
     .pl-o { background:rgba(16,185,129,.12); border:1px solid rgba(16,185,129,.22); }
+    .pl-g { background:rgba(79,156,249,.12); border:1px solid rgba(79,156,249,.22); }
+    .pl-q { background:rgba(168,85,247,.12); border:1px solid rgba(168,85,247,.22); }
     .prov-name  { font-size: 18px; font-weight: 700; margin-bottom: 3px; }
     .prov-model { font-size: 11px; color: var(--muted); font-family: monospace; }
     .prov-desc  { font-size: 13px; color: var(--text2); line-height: 1.72; margin-bottom: 22px; }
@@ -315,6 +320,8 @@
     .pt { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 6px; }
     .pt-c { background:rgba(255,154,76,.10); color:#fb923c; border:1px solid rgba(255,154,76,.18); }
     .pt-o { background:rgba(16,185,129,.10); color:var(--green); border:1px solid rgba(16,185,129,.18); }
+    .pt-g { background:rgba(79,156,249,.10); color:#4f9cf9; border:1px solid rgba(79,156,249,.18); }
+    .pt-q { background:rgba(168,85,247,.10); color:#a855f7; border:1px solid rgba(168,85,247,.18); }
 
     /* ── CODE ── */
     .code-sec { margin-bottom: 100px; }
@@ -440,15 +447,15 @@
   <div class="container">
     <div class="hero-grid">
       <div class="hero-l">
-        <div class="eyebrow"><div class="eyebrow-dot"></div>Production-Ready &nbsp;&#183;&nbsp; v2.0</div>
+        <div class="eyebrow"><div class="eyebrow-dot"></div>Production-Ready &nbsp;&#183;&nbsp; v4.0 &nbsp;&#183;&nbsp; 4 Providers</div>
         <h1>
           <span class="line1">AI Infrastructure</span><br/>
           <span class="line2">for Modern</span><br/>
           <span class="line3 grad-text">Builders.</span>
         </h1>
         <p class="hero-sub">
-          A dual-provider AI API backed by Claude and GPT&#8209;4o.
-          One endpoint. Real-time responses. Zero setup friction. Built to ship.
+          Claude, GPT&#8209;4o, Gemini, and Groq behind one unified API.
+          9 models. 4 providers. Real-time streaming. Zero re-implementation.
         </p>
         <div class="hero-btns">
           <a href="/docs" class="btn-primary">&#9889; Try in Docs</a>
@@ -498,8 +505,8 @@
           </div>
 
           <!-- Floating badges -->
-          <div class="float-b fb1" id="fb1">&#9889; Claude Haiku</div>
-          <div class="float-b fb2" id="fb2">&#128994; GPT&#8209;4o Mini</div>
+          <div class="float-b fb1" id="fb1">&#129000; Claude · Sonnet 4.6</div>
+          <div class="float-b fb2" id="fb2">&#128142; Gemini 2.0 Flash</div>
           <div class="float-b fb3" id="fb3">&#10003; 200 OK &middot; 318ms</div>
         </div>
       </div>
@@ -511,7 +518,7 @@
 <div class="container">
   <div class="stats-bar" id="statsBar">
     <div class="stat">
-      <span class="stat-val c-i" data-count="2">0</span>
+      <span class="stat-val c-i" data-count="4">0</span>
       <div class="stat-lbl">AI Providers</div>
     </div>
     <div class="stat">
@@ -523,8 +530,8 @@
       <div class="stat-lbl">Chat Memory</div>
     </div>
     <div class="stat">
-      <span class="stat-val c-v">HTTPS</span>
-      <div class="stat-lbl">End-to-End Encrypted</div>
+      <span class="stat-val c-v" data-count="9">0</span>
+      <div class="stat-lbl">AI Models</div>
     </div>
   </div>
 </div>
@@ -617,7 +624,7 @@
     <div class="step s2">
       <div class="step-num sn2">2</div>
       <h3>Pick Your Provider</h3>
-      <p>Pass <code style="color:#a78bfa">"provider":"claude"</code> or <code style="color:#a78bfa">"openai"</code> — switch any time, per request.</p>
+      <p>Pass <code style="color:#a78bfa">"provider":"claude"</code>, <code style="color:#a78bfa">"openai"</code>, <code style="color:#a78bfa">"gemini"</code>, or <code style="color:#a78bfa">"groq"</code> — switch any time, per request.</p>
     </div>
     <div class="step s3">
       <div class="step-num sn3">3</div>
@@ -631,34 +638,60 @@
 <div class="container" id="providers">
   <div class="sec-hd">
     <div class="sec-pill">Providers</div>
-    <h2>Two models. One API.</h2>
-    <p>Switch between the world's best AI models with a single field — no re-implementation, no SDK swaps.</p>
+    <h2>Four providers. One API.</h2>
+    <p>Switch between Claude, GPT-4o, Gemini, and Groq with a single field — no re-implementation, no SDK swaps.</p>
   </div>
   <div class="prov-grid">
     <div class="prov-card" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.1">
       <div class="prov-hd">
         <div class="prov-logo pl-c">&#129000;</div>
-        <div><div class="prov-name">Anthropic Claude</div><div class="prov-model">claude-haiku-4-5</div></div>
+        <div><div class="prov-name">Anthropic Claude</div><div class="prov-model">Haiku 4.5 · Sonnet 4.6 · Opus 4.7</div></div>
       </div>
-      <p class="prov-desc">Fast, context-aware, and precise. The default provider. Exceptional at complex reasoning, structured outputs, and RAG pipelines. Low latency. High consistency.</p>
+      <p class="prov-desc">The default provider. Exceptional reasoning, structured outputs, and RAG pipelines. 200K context window with industry-leading consistency at low latency.</p>
       <div class="prov-tags">
         <span class="pt pt-c">Default Provider</span>
         <span class="pt pt-c">RAG-Ready</span>
-        <span class="pt pt-c">Long Context</span>
-        <span class="pt pt-c">Low Latency</span>
+        <span class="pt pt-c">200K Context</span>
+        <span class="pt pt-c">3 Models</span>
       </div>
     </div>
     <div class="prov-card" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.1">
       <div class="prov-hd">
         <div class="prov-logo pl-o">&#129001;</div>
-        <div><div class="prov-name">OpenAI GPT-4o</div><div class="prov-model">gpt-4o-mini</div></div>
+        <div><div class="prov-name">OpenAI GPT-4o</div><div class="prov-model">GPT-4o Mini · GPT-4o</div></div>
       </div>
-      <p class="prov-desc">Cost-efficient and industry-standard. Pass <code style="color:var(--green);font-size:12px">"provider":"openai"</code> to switch instantly. Ideal when clients prefer the OpenAI ecosystem.</p>
+      <p class="prov-desc">Cost-efficient and industry-standard. Ideal for code generation, JSON mode, and when clients prefer the OpenAI ecosystem.</p>
       <div class="prov-tags">
         <span class="pt pt-o">Drop-in Switch</span>
-        <span class="pt pt-o">Cost Efficient</span>
-        <span class="pt pt-o">GPT-4o Quality</span>
-        <span class="pt pt-o">Industry Standard</span>
+        <span class="pt pt-o">JSON Mode</span>
+        <span class="pt pt-o">Code Generation</span>
+        <span class="pt pt-o">2 Models</span>
+      </div>
+    </div>
+    <div class="prov-card" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.1">
+      <div class="prov-hd">
+        <div class="prov-logo pl-g">&#128142;</div>
+        <div><div class="prov-name">Google Gemini</div><div class="prov-model">Gemini 2.0 Flash · 2.5 Pro</div></div>
+      </div>
+      <p class="prov-desc">Google's multimodal flagship. Industry-leading 1M token context window — perfect for huge documents, long conversations, and multimodal workloads.</p>
+      <div class="prov-tags">
+        <span class="pt pt-g">1M Context</span>
+        <span class="pt pt-g">Multimodal</span>
+        <span class="pt pt-g">Long Documents</span>
+        <span class="pt pt-g">2 Models</span>
+      </div>
+    </div>
+    <div class="prov-card" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.1">
+      <div class="prov-hd">
+        <div class="prov-logo pl-q">&#9889;</div>
+        <div><div class="prov-name">Groq LPU</div><div class="prov-model">Llama 3.3 70B · Mixtral 8x7B</div></div>
+      </div>
+      <p class="prov-desc">Hardware-accelerated inference on Groq's custom LPUs. Open-source models running up to 10× faster than GPU providers. Best-in-class token throughput.</p>
+      <div class="prov-tags">
+        <span class="pt pt-q">LPU Accelerated</span>
+        <span class="pt pt-q">Open Source</span>
+        <span class="pt pt-q">Ultra-Fast</span>
+        <span class="pt pt-q">2 Models</span>
       </div>
     </div>
   </div>
@@ -905,10 +938,10 @@ console.log(data.answer)<span class="cj">;</span>  <span class="cc">// done!</sp
       });
     });
 
-    // Provider cards
+    // Provider cards stagger
     gsap.utils.toArray('.prov-card').forEach((el,i) => {
-      gsap.fromTo(el, {opacity:0,x:i===0?-40:40}, {
-        opacity:1,x:0,duration:.8,
+      gsap.fromTo(el, {opacity:0,y:40,scale:.97}, {
+        opacity:1,y:0,scale:1,duration:.7,delay:i*.1,
         scrollTrigger:{trigger:'.prov-grid',start:'top 80%'}
       });
     });
