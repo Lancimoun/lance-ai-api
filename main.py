@@ -1,9 +1,9 @@
 """
-Axiom AI  v4.1
+Axiom AI  v4.2
 ──────────────
 Providers  : claude  → claude-haiku-4-5 | claude-sonnet-4-6 | claude-opus-4-7
-             openai  → gpt-4.1-mini | gpt-4.1
-             gemini  → gemini-2.5-flash | gemini-2.5-pro
+             openai  → gpt-5.4-mini | gpt-5.5
+             gemini  → gemini-3.5-flash | gemini-2.5-pro
              groq    → llama-3.3-70b-versatile | llama-3.1-8b-instant
 
 Endpoints  : GET  /              HTML landing page
@@ -58,18 +58,18 @@ _MODELS: dict = {
         },
     },
     "openai": {
-        "default": "gpt-4.1-mini",
+        "default": "gpt-5.4-mini",
         "provider_name": "OpenAI",
         "models": {
-            "gpt-4.1-mini": {"name": "GPT-4.1 Mini", "tier": "fast",    "ctx": 1_000_000},
-            "gpt-4.1":      {"name": "GPT-4.1",      "tier": "premium", "ctx": 1_000_000},
+            "gpt-5.4-mini": {"name": "GPT-5.4 Mini", "tier": "fast",    "ctx": 1_000_000},
+            "gpt-5.5":      {"name": "GPT-5.5",      "tier": "premium", "ctx": 1_000_000},
         },
     },
     "gemini": {
-        "default": "gemini-2.5-flash",
+        "default": "gemini-3.5-flash",
         "provider_name": "Google",
         "models": {
-            "gemini-2.5-flash": {"name": "Gemini 2.5 Flash", "tier": "fast",    "ctx": 1_000_000},
+            "gemini-3.5-flash": {"name": "Gemini 3.5 Flash", "tier": "fast",    "ctx": 1_000_000},
             "gemini-2.5-pro":   {"name": "Gemini 2.5 Pro",   "tier": "premium", "ctx": 1_000_000},
         },
     },

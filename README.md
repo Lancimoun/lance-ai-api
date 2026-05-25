@@ -1,12 +1,12 @@
 # Axiom AI
 
-**Production-grade AI infrastructure** — Claude, GPT-4.1, Gemini 2.5, and Groq behind one clean REST API. 4 providers. 9 models. One endpoint.
+**Production-grade AI infrastructure** — Claude, GPT-5.5, Gemini 3.5, and Groq behind one clean REST API. 4 providers. 9 models. One endpoint.
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![Claude](https://img.shields.io/badge/Claude-Haiku_4.5_·_Sonnet_4.6_·_Opus_4.7-cc785c?style=flat-square)](https://anthropic.com)
-[![OpenAI](https://img.shields.io/badge/GPT--4.1_Mini_·_GPT--4.1-412991?style=flat-square&logo=openai&logoColor=white)](https://openai.com)
-[![Gemini](https://img.shields.io/badge/Gemini-2.5_Flash_·_2.5_Pro-4285F4?style=flat-square&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
+[![OpenAI](https://img.shields.io/badge/GPT--5.4_Mini_·_GPT--5.5-412991?style=flat-square&logo=openai&logoColor=white)](https://openai.com)
+[![Gemini](https://img.shields.io/badge/Gemini-3.5_Flash_·_2.5_Pro-4285F4?style=flat-square&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
 [![Groq](https://img.shields.io/badge/Groq-Llama_3.3_70B_·_Llama_3.1_8B-F55036?style=flat-square)](https://groq.com)
 [![Railway](https://img.shields.io/badge/Railway-0B0D0E?style=flat-square&logo=railway)](https://railway.app)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
