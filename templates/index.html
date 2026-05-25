@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Axiom AI — Production-Ready AI Infrastructure</title>
-  <meta name="description" content="Dual-provider AI infrastructure powered by Claude and GPT-4o. Built for developers who ship."/>
+  <meta name="description" content="Quad-provider AI infrastructure — Claude, GPT-4.1, Gemini 2.5, and Groq behind one unified API. Built for developers who ship."/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -506,7 +506,7 @@
 
           <!-- Floating badges -->
           <div class="float-b fb1" id="fb1">&#129000; Claude · Sonnet 4.6</div>
-          <div class="float-b fb2" id="fb2">&#128142; Gemini 2.0 Flash</div>
+          <div class="float-b fb2" id="fb2">&#128142; Gemini 2.5 Flash</div>
           <div class="float-b fb3" id="fb3">&#10003; 200 OK &middot; 318ms</div>
         </div>
       </div>
@@ -639,7 +639,7 @@
   <div class="sec-hd">
     <div class="sec-pill">Providers</div>
     <h2>Four providers. One API.</h2>
-    <p>Switch between Claude, GPT-4o, Gemini, and Groq with a single field — no re-implementation, no SDK swaps.</p>
+    <p>Switch between Claude, GPT-4.1, Gemini 2.5, and Groq with a single field — no re-implementation, no SDK swaps.</p>
   </div>
   <div class="prov-grid">
     <div class="prov-card" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.1">
@@ -651,14 +651,14 @@
       <div class="prov-tags">
         <span class="pt pt-c">Default Provider</span>
         <span class="pt pt-c">RAG-Ready</span>
-        <span class="pt pt-c">200K Context</span>
+        <span class="pt pt-c">200K–1M Context</span>
         <span class="pt pt-c">3 Models</span>
       </div>
     </div>
     <div class="prov-card" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.1">
       <div class="prov-hd">
         <div class="prov-logo pl-o">&#129001;</div>
-        <div><div class="prov-name">OpenAI GPT-4o</div><div class="prov-model">GPT-4o Mini · GPT-4o</div></div>
+        <div><div class="prov-name">OpenAI GPT-4.1</div><div class="prov-model">GPT-4.1 Mini · GPT-4.1</div></div>
       </div>
       <p class="prov-desc">Cost-efficient and industry-standard. Ideal for code generation, JSON mode, and when clients prefer the OpenAI ecosystem.</p>
       <div class="prov-tags">
@@ -671,7 +671,7 @@
     <div class="prov-card" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.1">
       <div class="prov-hd">
         <div class="prov-logo pl-g">&#128142;</div>
-        <div><div class="prov-name">Google Gemini</div><div class="prov-model">Gemini 2.0 Flash · 2.5 Pro</div></div>
+        <div><div class="prov-name">Google Gemini</div><div class="prov-model">Gemini 2.5 Flash · 2.5 Pro</div></div>
       </div>
       <p class="prov-desc">Google's multimodal flagship. Industry-leading 1M token context window — perfect for huge documents, long conversations, and multimodal workloads.</p>
       <div class="prov-tags">
@@ -684,7 +684,7 @@
     <div class="prov-card" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.1">
       <div class="prov-hd">
         <div class="prov-logo pl-q">&#9889;</div>
-        <div><div class="prov-name">Groq LPU</div><div class="prov-model">Llama 3.3 70B · Mixtral 8x7B</div></div>
+        <div><div class="prov-name">Groq LPU</div><div class="prov-model">Llama 3.3 70B · Llama 3.1 8B</div></div>
       </div>
       <p class="prov-desc">Hardware-accelerated inference on Groq's custom LPUs. Open-source models running up to 10× faster than GPU providers. Best-in-class token throughput.</p>
       <div class="prov-tags">

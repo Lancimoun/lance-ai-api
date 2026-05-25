@@ -1,10 +1,10 @@
 """
-Axiom AI  v4.0
+Axiom AI  v4.1
 ──────────────
 Providers  : claude  → claude-haiku-4-5 | claude-sonnet-4-6 | claude-opus-4-7
-             openai  → gpt-4o-mini | gpt-4o
-             gemini  → gemini-2.0-flash | gemini-2.5-pro
-             groq    → llama-3.3-70b-versatile | mixtral-8x7b-32768
+             openai  → gpt-4.1-mini | gpt-4.1
+             gemini  → gemini-2.5-flash | gemini-2.5-pro
+             groq    → llama-3.3-70b-versatile | llama-3.1-8b-instant
 
 Endpoints  : GET  /              HTML landing page
              GET  /ping          ultra-light liveness probe (no auth)
@@ -53,23 +53,23 @@ _MODELS: dict = {
         "provider_name": "Anthropic",
         "models": {
             "claude-haiku-4-5":  {"name": "Haiku 4.5",  "tier": "fast",     "ctx": 200_000},
-            "claude-sonnet-4-6": {"name": "Sonnet 4.6", "tier": "balanced", "ctx": 200_000},
-            "claude-opus-4-7":   {"name": "Opus 4.7",   "tier": "premium",  "ctx": 200_000},
+            "claude-sonnet-4-6": {"name": "Sonnet 4.6", "tier": "balanced", "ctx": 1_000_000},
+            "claude-opus-4-7":   {"name": "Opus 4.7",   "tier": "premium",  "ctx": 1_000_000},
         },
     },
     "openai": {
-        "default": "gpt-4o-mini",
+        "default": "gpt-4.1-mini",
         "provider_name": "OpenAI",
         "models": {
-            "gpt-4o-mini": {"name": "GPT-4o Mini", "tier": "fast",    "ctx": 128_000},
-            "gpt-4o":      {"name": "GPT-4o",      "tier": "premium", "ctx": 128_000},
+            "gpt-4.1-mini": {"name": "GPT-4.1 Mini", "tier": "fast",    "ctx": 1_000_000},
+            "gpt-4.1":      {"name": "GPT-4.1",      "tier": "premium", "ctx": 1_000_000},
         },
     },
     "gemini": {
-        "default": "gemini-2.0-flash",
+        "default": "gemini-2.5-flash",
         "provider_name": "Google",
         "models": {
-            "gemini-2.0-flash": {"name": "Gemini 2.0 Flash", "tier": "fast",    "ctx": 1_000_000},
+            "gemini-2.5-flash": {"name": "Gemini 2.5 Flash", "tier": "fast",    "ctx": 1_000_000},
             "gemini-2.5-pro":   {"name": "Gemini 2.5 Pro",   "tier": "premium", "ctx": 1_000_000},
         },
     },
@@ -77,8 +77,8 @@ _MODELS: dict = {
         "default": "llama-3.3-70b-versatile",
         "provider_name": "Groq",
         "models": {
-            "llama-3.3-70b-versatile": {"name": "Llama 3.3 70B", "tier": "fast",     "ctx": 128_000},
-            "mixtral-8x7b-32768":      {"name": "Mixtral 8x7B",  "tier": "balanced", "ctx": 32_000},
+            "llama-3.3-70b-versatile": {"name": "Llama 3.3 70B", "tier": "balanced", "ctx": 131_072},
+            "llama-3.1-8b-instant":    {"name": "Llama 3.1 8B",  "tier": "fast",     "ctx": 131_072},
         },
     },
 }

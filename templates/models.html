@@ -312,7 +312,7 @@
   <div class="page-hd">
     <div class="eyebrow"><div class="eyebrow-dot"></div>4 Providers &nbsp;·&nbsp; 9 Models &nbsp;·&nbsp; May 2026</div>
     <h1>Nine Models.<br/><span class="grad">One Endpoint.</span></h1>
-    <p>Claude, GPT-4o, Gemini, and Groq behind a single unified API. Switch providers with one field. Zero re-implementation.</p>
+    <p>Claude, GPT-4.1, Gemini 2.5, and Groq behind a single unified API. Switch providers with one field. Zero re-implementation.</p>
   </div>
 
   <!-- PROVIDER CARDS -->
@@ -333,10 +333,10 @@
       </div>
       <p class="prov-desc">
         The default Axiom provider. Exceptional reasoning, structured outputs, and RAG pipelines.
-        Largest context window on the platform at 200K tokens. Industry-leading consistency at low latency.
+        Exceptional reasoning, structured outputs, and RAG pipelines. Haiku at 200K, Sonnet &amp; Opus at 1M token context.
       </p>
       <div class="spec-grid">
-        <div class="spec-cell"><div class="spec-label">Context Window</div><div class="spec-val sv-c">200K</div></div>
+        <div class="spec-cell"><div class="spec-label">Context Window</div><div class="spec-val sv-c">200K–1M</div></div>
         <div class="spec-cell"><div class="spec-label">Provider Key</div><div class="spec-val sv-c" style="font-size:13px;font-family:monospace">"claude"</div></div>
         <div class="spec-cell"><div class="spec-label">Models</div><div class="spec-val sv-c">3</div></div>
         <div class="spec-cell"><div class="spec-label">Status</div><div class="spec-val sv-c" id="claude-status">Checking…</div></div>
@@ -361,28 +361,28 @@
         <div class="prov-left">
           <div class="prov-logo pl-o">&#129001;</div>
           <div>
-            <div class="prov-name">OpenAI GPT-4o</div>
-            <div class="prov-model" id="openai-default">gpt-4o-mini</div>
+            <div class="prov-name">OpenAI GPT-4.1</div>
+            <div class="prov-model" id="openai-default">gpt-4.1-mini</div>
           </div>
         </div>
         <div class="avail-badge av-green" id="openai-badge"><div class="av-dot"></div>Live</div>
       </div>
       <p class="prov-desc">
-        Industry-standard and cost-efficient. Ideal when clients prefer the OpenAI ecosystem,
-        need advanced code generation, JSON mode, or the familiar ChatGPT-level quality bar.
+        OpenAI's newest flagship — GPT-4.1 brings 1M token context, stronger coding, and
+        instruction-following at a lower price than GPT-4o. Best choice for code generation and JSON mode.
       </p>
       <div class="spec-grid">
-        <div class="spec-cell"><div class="spec-label">Context Window</div><div class="spec-val sv-o">128K</div></div>
+        <div class="spec-cell"><div class="spec-label">Context Window</div><div class="spec-val sv-o">1M</div></div>
         <div class="spec-cell"><div class="spec-label">Provider Key</div><div class="spec-val sv-o" style="font-size:13px;font-family:monospace">"openai"</div></div>
         <div class="spec-cell"><div class="spec-label">Models</div><div class="spec-val sv-o">2</div></div>
         <div class="spec-cell"><div class="spec-label">Status</div><div class="spec-val sv-o" id="openai-status">Checking…</div></div>
       </div>
       <div class="model-pills">
-        <div class="model-row"><span class="model-id">gpt-4o-mini</span><span class="tier-badge t-fast">Fast</span></div>
-        <div class="model-row"><span class="model-id">gpt-4o</span><span class="tier-badge t-premium">Premium</span></div>
+        <div class="model-row"><span class="model-id">gpt-4.1-mini</span><span class="tier-badge t-fast">Fast</span></div>
+        <div class="model-row"><span class="model-id">gpt-4.1</span><span class="tier-badge t-premium">Premium</span></div>
       </div>
       <div class="tags">
-        <span class="tag to">Drop-in Switch</span>
+        <span class="tag to">1M Context</span>
         <span class="tag to">JSON Mode</span>
         <span class="tag to">Code Generation</span>
         <span class="tag to">Cost Efficient</span>
@@ -397,14 +397,14 @@
           <div class="prov-logo pl-g">&#128142;</div>
           <div>
             <div class="prov-name">Google Gemini</div>
-            <div class="prov-model" id="gemini-default">gemini-2.0-flash</div>
+            <div class="prov-model" id="gemini-default">gemini-2.5-flash</div>
           </div>
         </div>
         <div class="avail-badge av-green" id="gemini-badge"><div class="av-dot"></div>Live</div>
       </div>
       <p class="prov-desc">
-        Google's multimodal flagship with the largest context window on the platform — 1M tokens.
-        Gemini 2.0 Flash delivers lightning-fast inference while 2.5 Pro leads on complex reasoning benchmarks.
+        Google's multimodal flagship with a 1M token context window. Gemini 2.5 Flash delivers
+        best-in-class price-performance, while 2.5 Pro leads complex reasoning benchmarks.
       </p>
       <div class="spec-grid">
         <div class="spec-cell"><div class="spec-label">Context Window</div><div class="spec-val sv-g">1M</div></div>
@@ -413,7 +413,7 @@
         <div class="spec-cell"><div class="spec-label">Status</div><div class="spec-val sv-g" id="gemini-status">Checking…</div></div>
       </div>
       <div class="model-pills">
-        <div class="model-row"><span class="model-id">gemini-2.0-flash</span><span class="tier-badge t-fast">Fast</span></div>
+        <div class="model-row"><span class="model-id">gemini-2.5-flash</span><span class="tier-badge t-fast">Fast</span></div>
         <div class="model-row"><span class="model-id">gemini-2.5-pro</span><span class="tier-badge t-premium">Premium</span></div>
       </div>
       <div class="tags">
@@ -438,24 +438,24 @@
         <div class="avail-badge av-green" id="groq-badge"><div class="av-dot"></div>Live</div>
       </div>
       <p class="prov-desc">
-        Hardware-accelerated inference via Groq's custom Language Processing Units. Open-source models
-        (Llama, Mixtral) running at extreme speed — up to 10× faster throughput than GPU-based providers.
+        Hardware-accelerated inference via Groq's custom Language Processing Units. Open-source Llama
+        models running at extreme speed — up to 840 tokens/sec, 10× faster than GPU-based providers.
       </p>
       <div class="spec-grid">
-        <div class="spec-cell"><div class="spec-label">Context Window</div><div class="spec-val sv-q">128K</div></div>
+        <div class="spec-cell"><div class="spec-label">Context Window</div><div class="spec-val sv-q">131K</div></div>
         <div class="spec-cell"><div class="spec-label">Provider Key</div><div class="spec-val sv-q" style="font-size:13px;font-family:monospace">"groq"</div></div>
         <div class="spec-cell"><div class="spec-label">Models</div><div class="spec-val sv-q">2</div></div>
         <div class="spec-cell"><div class="spec-label">Status</div><div class="spec-val sv-q" id="groq-status">Checking…</div></div>
       </div>
       <div class="model-pills">
-        <div class="model-row"><span class="model-id">llama-3.3-70b-versatile</span><span class="tier-badge t-fast">Fast</span></div>
-        <div class="model-row"><span class="model-id">mixtral-8x7b-32768</span><span class="tier-badge t-balanced">Balanced</span></div>
+        <div class="model-row"><span class="model-id">llama-3.3-70b-versatile</span><span class="tier-badge t-balanced">Balanced</span></div>
+        <div class="model-row"><span class="model-id">llama-3.1-8b-instant</span><span class="tier-badge t-fast">Fast</span></div>
       </div>
       <div class="tags">
         <span class="tag tq">LPU Accelerated</span>
         <span class="tag tq">Open Source</span>
-        <span class="tag tq">Ultra-Low Latency</span>
-        <span class="tag tq">Llama 3.3</span>
+        <span class="tag tq">840 tok/sec</span>
+        <span class="tag tq">Llama 3.x</span>
       </div>
     </div>
 
@@ -485,16 +485,16 @@
         <tr>
           <td>Default model</td>
           <td><span class="mono">claude-haiku-4-5</span></td>
-          <td><span class="mono">gpt-4o-mini</span></td>
-          <td><span class="mono">gemini-2.0-flash</span></td>
+          <td><span class="mono">gpt-4.1-mini</span></td>
+          <td><span class="mono">gemini-2.5-flash</span></td>
           <td><span class="mono">llama-3.3-70b</span></td>
         </tr>
         <tr>
           <td>Context window</td>
-          <td style="color:var(--text)">200,000</td>
-          <td style="color:var(--text)">128,000</td>
+          <td style="color:var(--text)">200K – 1M</td>
           <td style="color:var(--text)">1,000,000</td>
-          <td style="color:var(--text)">128,000</td>
+          <td style="color:var(--text)">1,000,000</td>
+          <td style="color:var(--text)">131,072</td>
         </tr>
         <tr>
           <td>Available models</td>
