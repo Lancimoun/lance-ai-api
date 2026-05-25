@@ -3,7 +3,7 @@ Axiom AI  v4.2
 ──────────────
 Providers  : claude  → claude-haiku-4-5 | claude-sonnet-4-6 | claude-opus-4-7
              openai  → gpt-5.4-mini | gpt-5.5
-             gemini  → gemini-3.5-flash | gemini-2.5-pro
+             gemini  → gemini-3.5-flash | gemini-3.5-pro
              groq    → llama-3.3-70b-versatile | llama-3.1-8b-instant
 
 Endpoints  : GET  /              HTML landing page
@@ -70,7 +70,7 @@ _MODELS: dict = {
         "provider_name": "Google",
         "models": {
             "gemini-3.5-flash": {"name": "Gemini 3.5 Flash", "tier": "fast",    "ctx": 1_000_000},
-            "gemini-2.5-pro":   {"name": "Gemini 2.5 Pro",   "tier": "premium", "ctx": 1_000_000},
+            "gemini-3.5-pro":   {"name": "Gemini 3.5 Pro",   "tier": "premium", "ctx": 1_000_000},
         },
     },
     "groq": {
